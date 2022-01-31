@@ -27,10 +27,10 @@ namespace MonoScratch.Compiler {
             public override void AppendExecute(SourceGeneratorContext ctx) {
                 string i = ctx.GetNextSymbol("i", false);
 
-                ctx.Source.AppendLine($"for (int {i} = 0; {i} < Math.Round((double) {Times.GetNumberValue(ctx)}); {i}++)");
+                ctx.Source.AppendLine($"for (int {i} = 0; {i} < Math.Round((double) {Times.GetCode(ctx, BlockReturnType.NUMBER)}); {i}++)");
                 ctx.Source.PushBlock();
                 Substack.AppendExecute(ctx);
-                ctx.Source.AppendThreadYield();
+                ctx.AppendSoftYield();
                 ctx.Source.PopBlock();
             }
 

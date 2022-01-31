@@ -3,6 +3,9 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using Microsoft.CSharp;
+
+using System.CodeDom.Compiler; // TODO Use this to compile output automagically
 
 namespace MonoScratch.Compiler {
 
@@ -14,8 +17,12 @@ namespace MonoScratch.Compiler {
         public ItmScratchTarget? CurrentTarget;
         public ProcedureBlocks.DefinitionBlock? CurrentProcedure;
 
+        public bool ScreenRefresh => CurrentProcedure?.ScreenRefresh ?? true;
+
         public readonly ItmScratchStage Stage;
         public readonly Dictionary<string, ItmScratchSprite> Sprites;
+
+        private readonly CSharpCodeProvider _codeProvider;
 
         public IEnumerable<ItmScratchTarget> Targets {
             get {
@@ -31,6 +38,8 @@ namespace MonoScratch.Compiler {
             Source = new SourceGenerator();
             Project = project;
 
+            _codeProvider = new CSharpCodeProvider();
+
             SourceSymbols = new Dictionary<string, int>();
 
             Sprites = new Dictionary<string, ItmScratchSprite>();
@@ -38,6 +47,7 @@ namespace MonoScratch.Compiler {
             foreach (ScratchSprite sprite in Project.Sprites) {
                 Sprites.Add(sprite.Name, new ItmScratchSprite(this, sprite));
             }
+
         }
 
         public void GenerateSources() {
@@ -74,6 +84,20 @@ namespace MonoScratch.Compiler {
             return GetVariable(field.ID) ?? throw new SystemException($"Couldn't find variable {field.Name}.");
         }
 
+        public ItmScratchList? GetList(string? ID) {
+            if (ID == null)
+                return null;
+            ItmScratchList? var = Stage.GetList(ID);
+            if (var == null) {
+                var = CurrentTarget?.GetList(ID);
+            }
+            return var;
+        }
+
+        public ItmScratchList GetList(BlockField field) {
+            return GetList(field.ID) ?? throw new SystemException($"Couldn't find list {field.Name}.");
+        }
+
         public string GetNextSymbol(string rawName, bool fixCapitols = true) {
             StringBuilder sb = new StringBuilder();
             bool whiteSpace = true;
@@ -100,6 +124,12 @@ namespace MonoScratch.Compiler {
                 return name + (count - 1);
             } else {
                 SourceSymbols[name] = 0;
+
+                // Prevent keyword names
+                if (!_codeProvider.IsValidIdentifier(name)) {
+                    return "@" + name;
+                }
+
                 return name;
             }
         }
@@ -117,5 +147,9 @@ namespace MonoScratch.Compiler {
             } while (blockID != null);
         }
 
+        public void AppendSoftYield() {
+            if (ScreenRefresh)
+                Source.AppendLine("yield return YieldReason.YIELD;");
+        }
     }
 }

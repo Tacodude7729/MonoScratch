@@ -59,9 +59,5 @@ namespace MonoScratch.Compiler {
         public static string StringValue(string val) {
             return $"\"{val.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t")}\"";
         }
-
-        public void AppendThreadYield() {
-            AppendLine("yield return YieldReason.YIELD;");
-        }
     }
 }

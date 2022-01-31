@@ -12,6 +12,7 @@ namespace MonoScratch.Compiler {
         public readonly string ClassName;
 
         public readonly Dictionary<string, ItmScratchVariable> Variables;
+        public readonly Dictionary<string, ItmScratchList> Lists;
 
         public readonly Dictionary<string, ItmScratchBlock> Blocks;
         public readonly Dictionary<string, List<ItmScratchHatBlock>> HatBlockMap;
@@ -24,6 +25,11 @@ namespace MonoScratch.Compiler {
             Variables = new Dictionary<string, ItmScratchVariable>();
             foreach (KeyValuePair<string, ScratchVariable> variable in target.Variables) {
                 Variables.Add(variable.Key, new ItmScratchVariable(this, ctx, variable.Value));
+            }
+
+            Lists = new Dictionary<string, ItmScratchList>();
+            foreach (KeyValuePair<string, ScratchList> list in target.Lists) {
+                Lists.Add(list.Key, new ItmScratchList(this, ctx, list.Value));
             }
 
             Blocks = new Dictionary<string, ItmScratchBlock>();
@@ -64,6 +70,12 @@ namespace MonoScratch.Compiler {
             }
             ctx.Source.AppendLine();
 
+            foreach (ItmScratchList list in Lists.Values) {
+                ctx.Source.AppendLine($"// {list.Name}");
+                ctx.Source.AppendLine($"public MonoScratchList {list.CodeName};");
+            }
+            ctx.Source.AppendLine();
+
             // Constructor
             ctx.Source.AppendLine($"public {ClassName}() : base()");
             ctx.Source.PushBlock();
@@ -72,6 +84,15 @@ namespace MonoScratch.Compiler {
             foreach (ItmScratchVariable variable in Variables.Values) {
                 ctx.Source.AppendLine($"{variable.GetCode(ctx)} = new MonoScratchValue({BlockUtils.InterperateValue(variable.Value)});");
             }
+            foreach (ItmScratchList list in Lists.Values) {
+                ctx.Source.AppendLine();
+                string listCode = list.GetCode(ctx);
+                ctx.Source.AppendLine($"{listCode} = new MonoScratchList();");
+                foreach (string value in list.Values) {
+                    ctx.Source.AppendLine($"{listCode}.Add(new MonoScratchValue({BlockUtils.InterperateValue(value)}));");
+                }
+            }
+            ctx.Source.AppendLine();
             AppendToDefaultConstructor(ctx);
             ctx.Source.PopBlock();
 
@@ -119,11 +140,9 @@ namespace MonoScratch.Compiler {
 
             // Custom Blocks
             foreach (ProcedureBlocks.DefinitionBlock procedure in Procedures.Values) {
-
                 StringBuilder line = new StringBuilder($"public IEnumerable<YieldReason> {procedure.MethodName}(");
-                for (int i = 0; i < procedure.Arguments.Count; i++) {
-                    ProcedureBlocks.ProcedureArgument argument = procedure.Arguments[i];
-
+                int i = 0;
+                foreach (ProcedureBlocks.ProcedureArgument argument in procedure.ArgumentIdMap.Values) {
                     if (argument.ArgType == ProcedureBlocks.ProcedureArgumentType.VALUE) {
                         line.Append("MonoScratchValue ");
                     } else {
@@ -131,9 +150,10 @@ namespace MonoScratch.Compiler {
                     }
                     line.Append(argument.CodeName);
 
-                    if (i != procedure.Arguments.Count - 1) {
+                    if (i != procedure.ArgumentIdMap.Count - 1) {
                         line.Append(", ");
                     }
+                    ++i;
                 }
                 line.Append(")");
 
@@ -145,6 +165,7 @@ namespace MonoScratch.Compiler {
                 ctx.CurrentProcedure = null;
                 ctx.Source.AppendLine("yield break;");
                 ctx.Source.PopBlock();
+                ctx.Source.AppendLine();
             }
 
             ctx.Source.PopBlock();
@@ -159,6 +180,11 @@ namespace MonoScratch.Compiler {
         public ItmScratchVariable? GetVariable(string ID) {
             Variables.TryGetValue(ID, out ItmScratchVariable? var);
             return var;
+        }
+
+        public ItmScratchList? GetList(string ID) {
+            Lists.TryGetValue(ID, out ItmScratchList? list);
+            return list;
         }
     }
 

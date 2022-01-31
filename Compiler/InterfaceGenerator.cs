@@ -16,7 +16,12 @@ namespace MonoScratch.Compiler {
             ctx.Source.AppendLine("public static partial List<IMonoScratchSprite> GetSprites()");
             ctx.Source.PushBlock();
             ctx.Source.AppendLine("List<IMonoScratchSprite> sprites = new List<IMonoScratchSprite>();");
-            foreach (ItmScratchSprite sprite in ctx.Sprites.Values) {
+            
+            List<ItmScratchSprite> sprites = new List<ItmScratchSprite>();
+            sprites.AddRange(ctx.Sprites.Values);
+            sprites.Sort((s1, s2) => s2.Target.LayerOrder - s1.Target.LayerOrder);
+
+            foreach (ItmScratchSprite sprite in sprites) {
                 ctx.Source.AppendLine($"sprites.Add({sprite.ClassName}.Instance);");
             }
             ctx.Source.AppendLine("return sprites;");

@@ -16,10 +16,15 @@ namespace MonoScratch.Compiler {
 
             AddBlock("control_repeat", ControlBlocks.RepeatBlock.Create);
 
+            AddBlock("operator_add", OperatorBlocks.AddBlock.Create);
+
             AddBlock("data_setvariableto", DataBlocks.SetVariableToBlock.Create);
             AddBlock("data_changevariableby", DataBlocks.ChangeVariableByBlock.Create);
 
             AddBlock("procedures_definition", ProcedureBlocks.DefinitionBlock.Create);
+            AddBlock("procedures_call", ProcedureBlocks.CallBlock.Create);
+            AddBlock("argument_reporter_string_number", ProcedureBlocks.ArgumentReporterStringNumber.Create);
+            AddBlock("argument_reporter_boolean", ProcedureBlocks.ArgumentReporterBoolean.Create);
 
         }
 

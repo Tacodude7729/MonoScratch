@@ -8,5 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />
+    <PackageReference Include="System.CodeDom" Version="6.0.0" />
   </ItemGroup>
 </Project>

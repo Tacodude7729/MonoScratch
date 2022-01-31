@@ -7,8 +7,7 @@ namespace MonoScratch.Compiler {
         STRING,
         NUMBER,
         BOOLEAN,
-        VALUE,
-        ANY
+        ANY // Can be a 'string', 'double', 'bool' or 'MonoScratchValue'
     }
 
     public class ItmScratchBlock {
@@ -24,7 +23,10 @@ namespace MonoScratch.Compiler {
         public virtual void AppendExecute(SourceGeneratorContext ctx)
             => throw new NotImplementedException($"Can't execute block '{Opcode}'.");
 
-        public virtual BlockReturnType AppendValue(SourceGeneratorContext ctx)
+        public virtual string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType)
+            => throw new NotImplementedException($"Can't evaluate block '{Opcode}'.");
+
+        public virtual BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType)
             => throw new NotImplementedException($"Can't evaluate block '{Opcode}'.");
     }
 

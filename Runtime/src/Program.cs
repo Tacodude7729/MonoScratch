@@ -1,3 +1,4 @@
+using System.Threading;
 using MonoScratch.Project;
 
 namespace MonoScratch.Runtime {
@@ -11,7 +12,9 @@ namespace MonoScratch.Runtime {
         }
 
         public static void Main() {
-            Runtime.Run();
+            Thread.CurrentThread.Name = "Main";
+            // Runtime.Run();
+            Runtime.Step();
         }
     }
 }

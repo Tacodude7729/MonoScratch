@@ -21,11 +21,7 @@ namespace MonoScratch.Compiler {
             throw new SystemException();
         }
 
-        // public abstract string GetCode(SourceGeneratorContext ctx, BlockReturnType type);
-
-        public virtual string GetPerferedValue(SourceGeneratorContext ctx) => throw new NotImplementedException();
-        public virtual string GetNumberValue(SourceGeneratorContext ctx) => throw new NotImplementedException();
-        public virtual string GetStringValue(SourceGeneratorContext ctx) => throw new NotImplementedException();
+        public abstract string GetCode(SourceGeneratorContext ctx, BlockReturnType type);
     }
 
     public class RawBlockInput : ItmScratchBlockInput {
@@ -35,16 +31,18 @@ namespace MonoScratch.Compiler {
             Value = input.Value;
         }
 
-        public override string GetPerferedValue(SourceGeneratorContext ctx) {
-            return BlockUtils.InterperateValue(Value);
-        }
-
-        public override string GetStringValue(SourceGeneratorContext ctx) {
-            return SourceGenerator.StringValue(Value);
-        }
-
-        public override string GetNumberValue(SourceGeneratorContext ctx) {
-            return BlockUtils.InterperateString(Value).ToString();
+        public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
+            switch (type) {
+                case BlockReturnType.STRING:
+                    return SourceGenerator.StringValue(Value);
+                case BlockReturnType.NUMBER:
+                    return BlockUtils.InterperateString(Value).ToString();
+                case BlockReturnType.BOOLEAN:
+                    throw new SystemException("Cannot convert from raw block input to boolean.");
+                case BlockReturnType.ANY:
+                    return BlockUtils.InterperateValue(Value);
+            }
+            throw new SystemException("");
         }
     }
 
@@ -64,7 +62,55 @@ namespace MonoScratch.Compiler {
                 ctx.AppendBlocks(ID);
         }
 
-        // public override 
+        public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
+            if (ID == null)
+                throw new SystemException("Cannot evaluate a null block block input.");
+
+            ItmScratchBlock? block = null;
+
+            if (!(ctx.CurrentTarget?.Blocks.TryGetValue(ID, out block) ?? false))
+                throw new SystemException($"Cannot find block '{ID}'.");
+
+            BlockReturnType returnType = block.GetValueCodeReturnType(ctx, type);
+            string code = block.GetValueCode(ctx, type);
+
+            switch (type) {
+                case BlockReturnType.STRING:
+                    switch (returnType) {
+                        case BlockReturnType.STRING:
+                        case BlockReturnType.ANY:
+                            return code;
+                        case BlockReturnType.NUMBER:
+                            return code + ".ToString()";
+                    }
+                    break;
+                case BlockReturnType.NUMBER:
+                    switch (returnType) {
+                        case BlockReturnType.ANY:
+                        case BlockReturnType.NUMBER:
+                            return code;
+                        case BlockReturnType.STRING:
+                            return $"Utils.StringToNumber({code})";
+                    }
+                    break;
+                case BlockReturnType.BOOLEAN:
+                    switch (returnType) {
+                        case BlockReturnType.ANY:
+                        case BlockReturnType.BOOLEAN:
+                            return code;
+                        case BlockReturnType.STRING:
+                            return $"(({code}) ? \"true\" : \"false\")";
+                        case BlockReturnType.NUMBER:
+                            return $"(({code}) ? 1 : 0)";
+                    }
+                    break;
+                case BlockReturnType.ANY:
+                    if (returnType == BlockReturnType.ANY)
+                        return code;
+                    break;
+            }
+            throw new SystemException($"Cannot convert from {returnType} to {type}.");
+        }
     }
 
     // For variables and lists
@@ -79,18 +125,18 @@ namespace MonoScratch.Compiler {
             return ctx.GetVariable(ID) ?? throw new SystemException();
         }
 
-        public override string GetPerferedValue(SourceGeneratorContext ctx) {
-            // It would be nice to not have to convert everything to a string here.
-            //  It's not obvious how to fix it though...
-            return GetVariable(ctx).GetCodeString(ctx);
-        }
-
-        public override string GetStringValue(SourceGeneratorContext ctx) {
-            return GetVariable(ctx).GetCodeString(ctx);
-        }
-
-        public override string GetNumberValue(SourceGeneratorContext ctx) {
-            return GetVariable(ctx).GetCodeNumber(ctx);
+        public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
+            switch (type) {
+                case BlockReturnType.STRING:
+                    return GetVariable(ctx).GetCodeString(ctx);
+                case BlockReturnType.NUMBER:
+                    return GetVariable(ctx).GetCodeNumber(ctx);
+                case BlockReturnType.BOOLEAN:
+                    throw new SystemException("Cannot convert from variable to boolean.");
+                case BlockReturnType.ANY:
+                    return GetVariable(ctx).GetCode(ctx);
+            }
+            throw new SystemException("");
         }
     }
 
@@ -99,6 +145,10 @@ namespace MonoScratch.Compiler {
 
         public BroadcastBlockInput(BlockInputPrimitiveBroadcast input) {
             ID = input.ID;
+        }
+
+        public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
+            throw new NotImplementedException();
         }
     }
 }

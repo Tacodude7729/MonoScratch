@@ -42,7 +42,7 @@ namespace MonoScratch.Runtime {
             base.Initialize();
         }
 
-        private void Step() {
+        public void Step() {
             foreach (IMonoScratchSprite sprite in Sprites) {
                 sprite.OnGreenFlag();
             }
