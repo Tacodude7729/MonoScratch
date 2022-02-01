@@ -51,5 +51,17 @@ namespace MonoScratch.Runtime {
             return Contents[ToRealIndex(index)];
         }
 
+        public int IndexOf(MonoScratchValue value) {
+            for (int i = 0; i < Length; i++) {
+                if (Contents[i].Compare(value) == 0)
+                    return i + 1;
+            }
+            return 0;
+        }
+
+        public bool ContainsItem(MonoScratchValue value) {
+            return IndexOf(value) != 0;
+        }
+
     }
 }

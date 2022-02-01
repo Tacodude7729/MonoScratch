@@ -15,8 +15,7 @@ namespace MonoScratch.Runtime {
         public IMonoScratchStage Stage;
 
         public readonly GraphicsDeviceManager Graphics;
-        public readonly SpriteBatch SpriteBatch;
-        public RenderInfo RenderInfo;
+        public readonly MonoScratchRenderer Renderer;
 
         public MonoScratchRuntime() {
             Threads = new List<MonoScratchThread>();
@@ -30,11 +29,11 @@ namespace MonoScratch.Runtime {
             Graphics.PreferredBackBufferHeight = 720;
             Graphics.ApplyChanges();
 
-            SpriteBatch = new SpriteBatch(GraphicsDevice);
-            RenderInfo = new RenderInfo(this, SpriteBatch, 480, 360, 3);
+            Renderer = new MonoScratchRenderer(this);
         }
 
         protected override void Initialize() {
+            Renderer.LoadShaders();
             Stage.Assets.Load();
             foreach (IMonoScratchSprite sprite in Sprites)
                 sprite.Assets.Load();
@@ -61,21 +60,11 @@ namespace MonoScratch.Runtime {
         }
 
         protected override void Draw(GameTime gameTime) {
-            GraphicsDevice.Clear(Color.White);
-            SpriteBatch.Begin();
-
-            Stage.DrawStage(RenderInfo);
-
-            foreach (IMonoScratchSprite sprite in Sprites)
-                sprite.DrawSprite(RenderInfo);
-
-            SpriteBatch.End();
+            Renderer.Render();
             base.Draw(gameTime);
         }
     }
-
-    public record RenderInfo(MonoScratchRuntime RT, SpriteBatch SB, int Width, int Height, float PixelScale);
-
+    
     // Over engineered? Maybe.
     // Fast? Probably not.
     // Stylish? Yes

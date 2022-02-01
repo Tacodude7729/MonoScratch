@@ -13,8 +13,8 @@ namespace MonoScratch.Runtime {
 
         public static void Main() {
             Thread.CurrentThread.Name = "Main";
-            // Runtime.Run();
             Runtime.Step();
+            Runtime.Run();
         }
     }
 }

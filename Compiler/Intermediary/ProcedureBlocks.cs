@@ -193,41 +193,13 @@ namespace MonoScratch.Compiler {
 
             public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
                 if (!(ctx.CurrentProcedure?.ArgumentNameMap.TryGetValue(ArgumentName, out ProcedureArgument? argument) ?? false)) {
-                    switch (requestedType) {
-                        case BlockReturnType.STRING:
-                            return "\"0\"";
-                        case BlockReturnType.NUMBER:
-                            return "0";
-                        case BlockReturnType.BOOLEAN:
-                            return "false";
-                        case BlockReturnType.ANY:
-                            return "0";
-                    }
-                    throw new SystemException();
+                    return "MonoScratchValue.ZERO";
                 }
-                switch (requestedType) {
-                    case BlockReturnType.STRING:
-                        return $"{argument.CodeName}.AsString()";
-                    case BlockReturnType.NUMBER:
-                        return $"{argument.CodeName}.AsNumber()";
-                    case BlockReturnType.BOOLEAN:
-                    case BlockReturnType.ANY:
-                        return argument.CodeName;
-                }
-                throw new SystemException("");
+                return argument.CodeName;
             }
 
             public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) {
-                switch (requestedType) {
-                    case BlockReturnType.STRING:
-                        return BlockReturnType.STRING;
-                    case BlockReturnType.NUMBER:
-                        return BlockReturnType.NUMBER;
-                    case BlockReturnType.BOOLEAN:
-                    case BlockReturnType.ANY:
-                        return BlockReturnType.ANY;
-                }
-                throw new SystemException("");
+                return BlockReturnType.VALUE;
             }
 
             public static ArgumentReporterStringNumber Create(SourceGeneratorContext ctx, ScratchBlock block) {

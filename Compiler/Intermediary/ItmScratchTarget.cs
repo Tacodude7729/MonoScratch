@@ -82,14 +82,14 @@ namespace MonoScratch.Compiler {
             ctx.Source.AppendLine($"CurrentCostumeIdx = {Target.CurrentCostume};");
             ctx.Source.AppendLine();
             foreach (ItmScratchVariable variable in Variables.Values) {
-                ctx.Source.AppendLine($"{variable.GetCode(ctx)} = new MonoScratchValue({BlockUtils.InterperateValue(variable.Value)});");
+                ctx.Source.AppendLine($"{variable.GetCode(ctx)} = new MonoScratchValue({BlockUtils.StringToNumString(variable.Value)});");
             }
             foreach (ItmScratchList list in Lists.Values) {
                 ctx.Source.AppendLine();
                 string listCode = list.GetCode(ctx);
                 ctx.Source.AppendLine($"{listCode} = new MonoScratchList();");
                 foreach (string value in list.Values) {
-                    ctx.Source.AppendLine($"{listCode}.Add(new MonoScratchValue({BlockUtils.InterperateValue(value)}));");
+                    ctx.Source.AppendLine($"{listCode}.Add(new MonoScratchValue({BlockUtils.StringToNumString(value)}));");
                 }
             }
             ctx.Source.AppendLine();

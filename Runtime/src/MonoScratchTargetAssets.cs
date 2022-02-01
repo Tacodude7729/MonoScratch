@@ -35,14 +35,5 @@ namespace MonoScratch.Runtime {
         public void Load() {
             Texture = Texture2D.FromFile(Program.Runtime.GraphicsDevice, FilePath);
         }
-
-        public void DrawTexture(RenderInfo info, int x, int y, int rotation, int scale) {
-            info.SB.Draw(Texture,
-                new Vector2(info.PixelScale * (x + info.Width / 2f), info.PixelScale * (info.Height / 2f - y)),
-                null, Color.White,
-                (float)(Math.PI * (rotation - 90) / 180), RotationCenter,
-                new Vector2(info.PixelScale * (scale / 100f) / BitmapResolution, info.PixelScale * (scale / 100f) / BitmapResolution),
-                SpriteEffects.None, 0);
-        }
     }
 }

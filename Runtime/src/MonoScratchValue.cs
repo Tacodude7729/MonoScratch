@@ -2,6 +2,9 @@ using System.Globalization;
 
 namespace MonoScratch.Runtime {
     public class MonoScratchValue {
+
+        public static MonoScratchValue ZERO = new MonoScratchValue(0);
+        
         // Changes to this should be synced with BlockUtils in Compiler
         public const NumberStyles Styles =
             NumberStyles.AllowDecimalPoint |
@@ -74,6 +77,10 @@ namespace MonoScratch.Runtime {
 
         public override string ToString() {
             return AsString();
+        }
+
+        public int Compare(MonoScratchValue other) {
+            return Compare(this, other);
         }
 
         public static int Compare(MonoScratchValue v1, MonoScratchValue v2) {

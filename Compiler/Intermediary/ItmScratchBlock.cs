@@ -7,6 +7,7 @@ namespace MonoScratch.Compiler {
         STRING,
         NUMBER,
         BOOLEAN,
+        VALUE,
         ANY // Can be a 'string', 'double', 'bool' or 'MonoScratchValue'
     }
 

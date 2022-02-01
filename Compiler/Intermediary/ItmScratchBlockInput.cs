@@ -36,13 +36,15 @@ namespace MonoScratch.Compiler {
                 case BlockReturnType.STRING:
                     return SourceGenerator.StringValue(Value);
                 case BlockReturnType.NUMBER:
-                    return BlockUtils.InterperateString(Value).ToString();
-                case BlockReturnType.BOOLEAN:
-                    throw new SystemException("Cannot convert from raw block input to boolean.");
+                    return BlockUtils.StringToNum(Value).ToString();
                 case BlockReturnType.ANY:
-                    return BlockUtils.InterperateValue(Value);
+                    return BlockUtils.StringToNumString(Value);
+                case BlockReturnType.VALUE:
+                    return $"new MonoScratchValue({BlockUtils.StringToNumString(Value)})";
+                case BlockReturnType.BOOLEAN:
+                    break;
             }
-            throw new SystemException("");
+            throw new SystemException($"Cannot convert raw input to {type}.");
         }
     }
 
@@ -78,36 +80,37 @@ namespace MonoScratch.Compiler {
                 case BlockReturnType.STRING:
                     switch (returnType) {
                         case BlockReturnType.STRING:
-                        case BlockReturnType.ANY:
                             return code;
+                        case BlockReturnType.ANY:
                         case BlockReturnType.NUMBER:
+                        case BlockReturnType.VALUE:
                             return code + ".ToString()";
+                        case BlockReturnType.BOOLEAN:
+                            return $"(({code}) ? \"true\" : \"false\")";
                     }
                     break;
                 case BlockReturnType.NUMBER:
                     switch (returnType) {
-                        case BlockReturnType.ANY:
                         case BlockReturnType.NUMBER:
                             return code;
                         case BlockReturnType.STRING:
                             return $"Utils.StringToNumber({code})";
+                        case BlockReturnType.BOOLEAN:
+                            return $"(({code}) ? 1 : 0)";
+                        case BlockReturnType.VALUE:
+                            return code + ".AsNumber()";
                     }
                     break;
                 case BlockReturnType.BOOLEAN:
-                    switch (returnType) {
-                        case BlockReturnType.ANY:
-                        case BlockReturnType.BOOLEAN:
-                            return code;
-                        case BlockReturnType.STRING:
-                            return $"(({code}) ? \"true\" : \"false\")";
-                        case BlockReturnType.NUMBER:
-                            return $"(({code}) ? 1 : 0)";
-                    }
-                    break;
-                case BlockReturnType.ANY:
-                    if (returnType == BlockReturnType.ANY)
+                    if (returnType == BlockReturnType.BOOLEAN)
                         return code;
                     break;
+                case BlockReturnType.ANY:
+                    return code;
+                case BlockReturnType.VALUE:
+                    if (returnType == BlockReturnType.VALUE)
+                        return code;
+                    return $"new MonoScratchValue({code})";
             }
             throw new SystemException($"Cannot convert from {returnType} to {type}.");
         }
@@ -133,6 +136,7 @@ namespace MonoScratch.Compiler {
                     return GetVariable(ctx).GetCodeNumber(ctx);
                 case BlockReturnType.BOOLEAN:
                     throw new SystemException("Cannot convert from variable to boolean.");
+                case BlockReturnType.VALUE:
                 case BlockReturnType.ANY:
                     return GetVariable(ctx).GetCode(ctx);
             }

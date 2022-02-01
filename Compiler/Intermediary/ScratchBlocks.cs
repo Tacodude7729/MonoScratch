@@ -20,6 +20,15 @@ namespace MonoScratch.Compiler {
 
             AddBlock("data_setvariableto", DataBlocks.SetVariableToBlock.Create);
             AddBlock("data_changevariableby", DataBlocks.ChangeVariableByBlock.Create);
+            AddBlock("data_addtolist", DataBlocks.ListAddToBlock.Create);
+            AddBlock("data_deleteoflist", DataBlocks.ListDeleteBlock.Create);
+            AddBlock("data_deletealloflist", DataBlocks.ListDeleteAllBlock.Create);
+            AddBlock("data_insertatlist", DataBlocks.ListInsertBlock.Create);
+            AddBlock("data_replaceitemoflist", DataBlocks.ListReplaceItemBlock.Create);
+            AddBlock("data_itemoflist", DataBlocks.ListItemOf.Create);
+            AddBlock("data_itemnumoflist", DataBlocks.ListItemNumOf.Create);
+            AddBlock("data_lengthoflist", DataBlocks.ListLength.Create);
+            AddBlock("data_listcontainsitem", DataBlocks.ListContainsItem.Create);
 
             AddBlock("procedures_definition", ProcedureBlocks.DefinitionBlock.Create);
             AddBlock("procedures_call", ProcedureBlocks.CallBlock.Create);

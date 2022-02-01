@@ -49,7 +49,7 @@ namespace MonoScratch.Compiler {
         }
 
         public class ListAddToBlock : ListBlock {
-            public ItmScratchBlockInput Item;
+            public readonly ItmScratchBlockInput Item;
 
             public ListAddToBlock(ScratchBlock block) : base(block) {
                 Item = ItmScratchBlockInput.From(block.Inputs["ITEM"]);
@@ -65,7 +65,7 @@ namespace MonoScratch.Compiler {
         }
 
         public class ListDeleteBlock : ListBlock {
-            public ItmScratchBlockInput Index;
+            public readonly ItmScratchBlockInput Index;
 
             public ListDeleteBlock(ScratchBlock block) : base(block) {
                 Index = ItmScratchBlockInput.From(block.Inputs["INDEX"]);
@@ -94,7 +94,7 @@ namespace MonoScratch.Compiler {
         }
 
         public class ListInsertBlock : ListBlock {
-            public ItmScratchBlockInput Index, Item;
+            public readonly ItmScratchBlockInput Index, Item;
 
             public ListInsertBlock(ScratchBlock block) : base(block) {
                 Index = ItmScratchBlockInput.From(block.Inputs["INDEX"]);
@@ -103,7 +103,7 @@ namespace MonoScratch.Compiler {
 
             public override void AppendExecute(SourceGeneratorContext ctx) {
                 ItmScratchList list = ctx.GetList(ListField);
-                ctx.Source.AppendLine($"{list.GetCode(ctx)}.Insert({Index.GetCode(ctx, BlockReturnType.NUMBER)}, new MonoScratchValue({Item.GetCode(ctx, BlockReturnType.ANY)});");
+                ctx.Source.AppendLine($"{list.GetCode(ctx)}.Insert({Index.GetCode(ctx, BlockReturnType.NUMBER)}, {Item.GetCode(ctx, BlockReturnType.VALUE)});");
             }
 
             public static ListInsertBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
@@ -111,7 +111,7 @@ namespace MonoScratch.Compiler {
         }
 
         public class ListReplaceItemBlock : ListBlock {
-            public ItmScratchBlockInput Index, Item;
+            public readonly ItmScratchBlockInput Index, Item;
 
             public ListReplaceItemBlock(ScratchBlock block) : base(block) {
                 Index = ItmScratchBlockInput.From(block.Inputs["INDEX"]);
@@ -120,7 +120,7 @@ namespace MonoScratch.Compiler {
 
             public override void AppendExecute(SourceGeneratorContext ctx) {
                 ItmScratchList list = ctx.GetList(ListField);
-                ctx.Source.AppendLine($"{list.GetCode(ctx)}.Replace({Index.GetCode(ctx, BlockReturnType.NUMBER)}, new MonoScratchValue({Item.GetCode(ctx, BlockReturnType.ANY)});");
+                ctx.Source.AppendLine($"{list.GetCode(ctx)}.Replace({Index.GetCode(ctx, BlockReturnType.NUMBER)}, {Item.GetCode(ctx, BlockReturnType.VALUE)});");
             }
 
             public static ListReplaceItemBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
@@ -128,21 +128,80 @@ namespace MonoScratch.Compiler {
         }
 
         public class ListItemOf : ListBlock {
-            public ItmScratchBlockInput Index;
+            public readonly ItmScratchBlockInput Index;
 
             public ListItemOf(ScratchBlock block) : base(block) {
                 Index = ItmScratchBlockInput.From(block.Inputs["INDEX"]);
             }
 
-            // public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
-            //     return base.GetValueCode(ctx, requestedType);
-            // }
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                ItmScratchList list = ctx.GetList(ListField);
+                return $"{list.GetCode(ctx)}.Get({Index.GetCode(ctx, BlockReturnType.NUMBER)})";
+            }
 
-
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                return BlockReturnType.VALUE;
+            }
 
             public static ListItemOf Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
                 => new ListItemOf(scratchBlock);
         }
 
+        public class ListItemNumOf : ListBlock {
+            public readonly ItmScratchBlockInput Item;
+
+            public ListItemNumOf(ScratchBlock block) : base(block) {
+                Item = ItmScratchBlockInput.From(block.Inputs["ITEM"]);
+            }
+
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                ItmScratchList list = ctx.GetList(ListField);
+                return $"{list.GetCode(ctx)}.IndexOf({Item.GetCode(ctx, BlockReturnType.VALUE)})";
+            }
+
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                return BlockReturnType.NUMBER;
+            }
+
+            public static ListItemNumOf Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
+                => new ListItemNumOf(scratchBlock);
+        }
+
+        public class ListLength : ListBlock {
+            public ListLength(ScratchBlock block) : base(block) {
+            }
+
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                ItmScratchList list = ctx.GetList(ListField);
+                return $"{list.GetCode(ctx)}.Length";
+            }
+
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                return BlockReturnType.NUMBER;
+            }
+
+            public static ListLength Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
+                => new ListLength(scratchBlock);
+        }
+
+        public class ListContainsItem : ListBlock {
+            public readonly ItmScratchBlockInput Item;
+
+            public ListContainsItem(ScratchBlock block) : base(block) {
+                Item = ItmScratchBlockInput.From(block.Inputs["ITEM"]);
+            }
+
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                ItmScratchList list = ctx.GetList(ListField);
+                return $"{list.GetCode(ctx)}.ContainsItem({Item.GetCode(ctx, BlockReturnType.VALUE)})";
+            }
+
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                return BlockReturnType.BOOLEAN;
+            }
+
+            public static ListContainsItem Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock)
+                => new ListContainsItem(scratchBlock);
+        }
     }
 }
