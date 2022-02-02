@@ -7,42 +7,76 @@
 	#define PS_SHADERMODEL ps_4_0_level_9_1
 #endif
 
-Texture2D SpriteTexture;
+float2 CanvasSize;
 
-float AspectRatio;
+struct VertexShaderInput {
+	float2 Position : SV_POSITION;
 
-float2 LinePoint1;
-float2 LinePoint2;
-float LineThickness;
+    float2 LinePoint : TEXCOORD0;
+    float2 LinePointDiff : TEXCOORD1;
 
-sampler2D SpriteTextureSampler = sampler_state
-{
-	Texture = <SpriteTexture>;
+    float4 LineColor : COLOR;
+    float2 LineLengthThickness : TEXCOORD2;
 };
 
-struct VertexShaderOutput
-{
+struct VertexShaderOutput {
 	float4 Position : SV_POSITION;
-	float4 Color : COLOR0;
-	float2 TextureCoordinates : TEXCOORD0;
+	float2 TexCoord : TEXCOORD0;
+
+	float4 LineColor : COLOR;
+	float2 LineLengthThickness : TEXCOORD1;
 };
 
-float4 MainPS(VertexShaderOutput input) : COLOR
-{
-	// These 5 lines took me so long :_(
-	float4 pixelColor = tex2D(SpriteTextureSampler,input.TextureCoordinates);
-	input.TextureCoordinates.y *= AspectRatio;
-	input.TextureCoordinates -= LinePoint1;
-	float2 diff = LinePoint2 - LinePoint1;
-	float dist = length(input.TextureCoordinates - diff * clamp(dot(input.TextureCoordinates, diff) / dot(diff, diff), 0.0, 1.0));
-	return lerp(pixelColor, input.Color, smoothstep(LineThickness + 0.003, LineThickness, dist));
-	// return lerp(pixelColor, input.Color, step(dist, LineThickness));
+static const float epsilon = 1e-3;
+
+VertexShaderOutput MainVS(VertexShaderInput input) {
+	VertexShaderOutput output = (VertexShaderOutput)0;
+
+	float2 position = input.Position;
+	float expandedRadius = (input.LineLengthThickness.y * 0.5) + 1.4142135623730951;
+
+	output.TexCoord.x = lerp(0.0, input.LineLengthThickness.x + (expandedRadius * 2.0), input.Position.x) - expandedRadius;
+	output.TexCoord.y = ((input.Position.y - 0.5) * expandedRadius) + 0.5;
+
+	position.x *= input.LineLengthThickness.x + (2.0 * expandedRadius);
+	position.y *= 2.0 * expandedRadius;
+
+	position -= expandedRadius;
+
+	float2 pointDiff = input.LinePointDiff;
+
+	pointDiff.x = (abs(pointDiff.x) < epsilon && abs(pointDiff.y) < epsilon) ? epsilon : pointDiff.x;
+
+	float2 normalized = pointDiff / max(input.LineLengthThickness.x, epsilon);
+	position = mul(float2x2(normalized.x, normalized.y, -normalized.y, normalized.x), position);
+
+	position += input.LinePoint;
+	position *= 2.0 / CanvasSize;
+
+	output.Position = float4(position, 0, 1);
+
+	output.LineLengthThickness = input.LineLengthThickness;
+	output.LineColor = input.LineColor;
+
+	// output.Position = float4(input.Position, 0.0);
+
+	return output;
 }
 
-technique LineDrawing
-{
-	pass P0
-	{
+float4 MainPS(VertexShaderOutput input) : COLOR {
+	float d = ((input.TexCoord.x - clamp(input.TexCoord.x, 0.0, input.LineLengthThickness.x)) * 0.5) + 0.5;
+
+	float ln = distance(float2(0.5, 0.5), float2(d, input.TexCoord.y)) * 2.0;
+	ln -= ((input.LineLengthThickness.y - 1.0) * 0.5);
+
+	return input.LineColor * clamp(1.0 - ln, 0.0, 1.0);
+
+	// return float4(1.0, 0.0, 0.0, 1.0);
+}
+
+technique LineDrawing {
+	pass P0 {
+        VertexShader = compile VS_SHADERMODEL MainVS();
 		PixelShader = compile PS_SHADERMODEL MainPS();
 		AlphaBlendEnable = TRUE;
         DestBlend = INVSRCALPHA;
