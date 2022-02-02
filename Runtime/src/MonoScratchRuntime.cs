@@ -11,16 +11,22 @@ namespace MonoScratch.Runtime {
 
         public List<MonoScratchThread> Threads;
 
-        public List<IMonoScratchSprite> Sprites;
+        public List<IMonoScratchSprite> DefaultSprites;
         public IMonoScratchStage Stage;
+
+        public TargetLinkedList Targets;
 
         public readonly GraphicsDeviceManager Graphics;
         public readonly MonoScratchRenderer Renderer;
 
         public MonoScratchRuntime() {
             Threads = new List<MonoScratchThread>();
-            Sprites = Interface.GetSprites();
+            DefaultSprites = Interface.GetSprites();
             Stage = Interface.GetStage();
+            Targets = new TargetLinkedList();
+
+            foreach (IMonoScratchSprite sprite in DefaultSprites)
+                Targets.InsertLast(sprite);
 
             Graphics = new GraphicsDeviceManager(this);
 
@@ -33,16 +39,15 @@ namespace MonoScratch.Runtime {
         }
 
         protected override void Initialize() {
-            Renderer.LoadShaders();
             Stage.Assets.Load();
-            foreach (IMonoScratchSprite sprite in Sprites)
+            foreach (IMonoScratchSprite sprite in DefaultSprites)
                 sprite.Assets.Load();
 
             base.Initialize();
         }
 
         public void Step() {
-            foreach (IMonoScratchSprite sprite in Sprites) {
+            foreach (IMonoScratchSprite sprite in DefaultSprites) {
                 sprite.OnGreenFlag();
             }
             Stage.OnGreenFlag();
@@ -64,18 +69,34 @@ namespace MonoScratch.Runtime {
             base.Draw(gameTime);
         }
     }
-    
+
     // Over engineered? Maybe.
     // Fast? Probably not.
     // Stylish? Yes
-    public class SpriteLinkedList {
+    public class TargetLinkedList {
 
-        public SpriteLinkedListNode? First, Last;
+        public Node? First, Last;
 
-        public SpriteLinkedList() { }
+        public TargetLinkedList() { }
 
-        public SpriteLinkedListNode InsertLast(IMonoScratchSprite other) {
-            SpriteLinkedListNode node = new SpriteLinkedListNode(other);
+        public IEnumerable<IMonoScratchTarget> Forward() {
+            Node? node = First;
+            while (node != null) {
+                yield return node.Sprite;
+                node = node.After;
+            }
+        }
+
+        public IEnumerable<IMonoScratchTarget> Backward() {
+            Node? node = Last;
+            while (node != null) {
+                yield return node.Sprite;
+                node = node.Before;
+            }
+        }
+
+        public Node InsertLast(IMonoScratchTarget other) {
+            Node node = new Node(other);
             if (Last == null) {
                 Last = node;
                 First = node;
@@ -87,8 +108,8 @@ namespace MonoScratch.Runtime {
             return node;
         }
 
-        public SpriteLinkedListNode InsertFirst(IMonoScratchSprite other) {
-            SpriteLinkedListNode node = new SpriteLinkedListNode(other);
+        public Node InsertFirst(IMonoScratchTarget other) {
+            Node node = new Node(other);
             if (First == null) {
                 Last = node;
                 First = node;
@@ -100,16 +121,16 @@ namespace MonoScratch.Runtime {
             return node;
         }
 
-        public class SpriteLinkedListNode {
-            public SpriteLinkedListNode? Before, After;
-            public IMonoScratchSprite Sprite;
+        public class Node {
+            public Node? Before, After;
+            public IMonoScratchTarget Sprite;
 
-            public SpriteLinkedListNode(IMonoScratchSprite sprite) {
+            public Node(IMonoScratchTarget sprite) {
                 Sprite = sprite;
             }
 
-            public SpriteLinkedListNode InsertBefore(IMonoScratchSprite other) {
-                SpriteLinkedListNode node = new SpriteLinkedListNode(other);
+            public Node InsertBefore(IMonoScratchTarget other) {
+                Node node = new Node(other);
                 if (Before != null) {
                     Before.After = node;
                     node.Before = Before;
@@ -119,8 +140,8 @@ namespace MonoScratch.Runtime {
                 return node;
             }
 
-            public SpriteLinkedListNode InsertAfter(IMonoScratchSprite other) {
-                SpriteLinkedListNode node = new SpriteLinkedListNode(other);
+            public Node InsertAfter(IMonoScratchTarget other) {
+                Node node = new Node(other);
                 if (After != null) {
                     After.Before = node;
                     node.After = After;

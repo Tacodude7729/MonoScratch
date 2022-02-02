@@ -35,9 +35,11 @@ namespace MonoScratch.Compiler {
         public readonly string ListenerMethodName;
         public readonly string MethodName;
 
+        public virtual bool ReturnThreads => false;
+
         public ItmScratchHatBlock(SourceGeneratorContext ctx, ScratchBlock block, string method) : base(block) {
             MethodName = ctx.GetNextSymbol(method + "Listener");
-            ListenerMethodName = method;
+            ListenerMethodName = "On" + method;
         }
 
         public virtual void AppendMethodHeader(SourceGeneratorContext ctx) {
@@ -45,7 +47,7 @@ namespace MonoScratch.Compiler {
         }
 
         public virtual void AppendListenerMethodHeader(SourceGeneratorContext ctx) {
-            ctx.Source.AppendLine($"public void {ListenerMethodName}()");
+            ctx.Source.AppendLine($"public {(ReturnThreads ? "IEnumerable<MonoScratchThread>" : "void")} {ListenerMethodName}()");
         }
     }
 

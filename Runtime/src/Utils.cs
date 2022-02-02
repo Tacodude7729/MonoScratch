@@ -1,8 +1,10 @@
 namespace MonoScratch.Runtime {
     public static class Utils {
 
-        public static void StartThread(MonoScratchThread.ScratchFunction function) {
-            Program.Runtime.Threads.Add(new MonoScratchThread(function));
+        public static MonoScratchThread StartThread(MonoScratchThread.ScratchFunction function) {
+            MonoScratchThread thread = new MonoScratchThread(function);
+            Program.Runtime.Threads.Add(thread);
+            return thread;
         }
 
         public static double StringToNumber(string str) {

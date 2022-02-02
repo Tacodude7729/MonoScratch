@@ -120,7 +120,8 @@ namespace MonoScratch.Compiler {
                 firstHat.AppendListenerMethodHeader(ctx);
                 ctx.Source.PushBlock();
                 foreach (ItmScratchHatBlock hat in hats.Value) { // TODO Order
-                    ctx.Source.AppendLine($"Utils.StartThread({hat.MethodName});");
+                    if (hat.Block.NextID != null)
+                        ctx.Source.AppendLine($"{(firstHat.ReturnThreads ? "yield return " : "")}Utils.StartThread({hat.MethodName});");
                 }
                 ctx.Source.PopBlock();
                 ctx.Source.AppendLine();
@@ -150,10 +151,9 @@ namespace MonoScratch.Compiler {
                     }
                     line.Append(argument.CodeName);
 
-                    if (i != procedure.ArgumentIdMap.Count - 1) {
+                    if (++i != procedure.ArgumentIdMap.Count) {
                         line.Append(", ");
                     }
-                    ++i;
                 }
                 line.Append(")");
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using static MonoScratch.Compiler.EventBlocks;
 
 namespace MonoScratch.Compiler {
 
@@ -40,6 +41,13 @@ namespace MonoScratch.Compiler {
             // ProjectEventListener
             ctx.Source.AppendLine("public partial interface ProjectEvents");
             ctx.Source.PushBlock();
+
+            foreach (ItmScratchBroadcast broadcast in ctx.Broadcasts.Values) {
+                ctx.Source.AppendLine($"public IEnumerable<MonoScratchThread> {broadcast.RunListenersName}()");
+                ctx.Source.PushBlock();
+                ctx.Source.AppendLine("yield break;");
+                ctx.Source.PopBlock();
+            }
             ctx.Source.PopBlock();
         }
     }

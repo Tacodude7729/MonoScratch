@@ -12,7 +12,8 @@ namespace MonoScratch.Compiler {
         static ScratchBlocks() {
             _blocks = new Dictionary<string, BlockType>();
 
-            AddBlock("event_whenflagclicked", EventBlocks.GreenFlagClicked);
+            AddBlock("event_whenflagclicked", EventBlocks.CreateGreenFlagClicked);
+            AddBlock("event_whenbroadcastreceived", EventBlocks.BroadcastReceivedBlock.Create);
 
             AddBlock("control_repeat", ControlBlocks.RepeatBlock.Create);
 

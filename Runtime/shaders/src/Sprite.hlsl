@@ -9,6 +9,10 @@
 
 Texture2D SpriteTexture;
 
+float BrightnessEffect;
+
+static const float epsilon = 1e-3;
+
 sampler2D SpriteTextureSampler = sampler_state
 {
 	Texture = <SpriteTexture>;
@@ -23,8 +27,12 @@ struct VertexShaderOutput
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-	float4 texColor = tex2D(SpriteTextureSampler,input.TextureCoordinates);
-	return texColor;
+	float4 pixelColor = tex2D(SpriteTextureSampler,input.TextureCoordinates);
+
+	pixelColor.rgb = clamp(pixelColor.rgb + float3(BrightnessEffect, BrightnessEffect, BrightnessEffect), float3(0, 0, 0), float3(1, 1, 1));
+	pixelColor.rgb = clamp(pixelColor.rgb / (pixelColor.a + epsilon), 0.0, 1.0);
+
+	return pixelColor;
 }
 
 technique SpriteDrawing
@@ -32,5 +40,8 @@ technique SpriteDrawing
 	pass P0
 	{
 		PixelShader = compile PS_SHADERMODEL MainPS();
+		AlphaBlendEnable = TRUE;
+		DestBlend = INVSRCALPHA;
+		SrcBlend = SRCALPHA;
 	}
 };

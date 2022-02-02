@@ -14,7 +14,7 @@ namespace MonoScratch.Compiler {
             } else if (input is BlockInputPrimitiveVariableList varList) {
                 return new VariableBlockInput(varList);
             } else if (input is BlockInputPrimitiveBroadcast broadcast) {
-                return new BroadcastBlockInput(broadcast);
+                throw new SystemException("Cannot create Scratch block input from broadcast!");
             } else if (input is BlockInputPrimitiveRaw raw) {
                 return new RawBlockInput(raw);
             }
@@ -141,18 +141,6 @@ namespace MonoScratch.Compiler {
                     return GetVariable(ctx).GetCode(ctx);
             }
             throw new SystemException("");
-        }
-    }
-
-    public class BroadcastBlockInput : ItmScratchBlockInput {
-        public readonly string ID;
-
-        public BroadcastBlockInput(BlockInputPrimitiveBroadcast input) {
-            ID = input.ID;
-        }
-
-        public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
-            throw new NotImplementedException();
         }
     }
 }

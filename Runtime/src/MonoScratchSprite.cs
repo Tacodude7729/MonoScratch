@@ -16,6 +16,8 @@ namespace MonoScratch.Runtime {
         // public bool Draggable; TODO
         // public string RotationStyle; TODO
 
+        public TargetLinkedList.Node? SpriteListNode { get; set; }
+
         public void DrawSprite(MonoScratchRenderer renderer);
     }
 
@@ -25,7 +27,7 @@ namespace MonoScratch.Runtime {
         static MonoScratchSprite() {
             Clones = new List<T>();
         }
-        
+
         public int X { get; set; }
         public int Y { get; set; }
 
@@ -33,9 +35,10 @@ namespace MonoScratch.Runtime {
 
         public int Size { get; set; }
         public int Direction { get; set; }
+        public TargetLinkedList.Node? SpriteListNode { get; set; }
 
         public void DrawSprite(MonoScratchRenderer renderer) {
-            renderer.RenderCostume(CurrentCostume, 0, 0, 90, 100);
+            renderer.RenderCostume(CurrentCostume, X, Y, Direction, Size);
         }
     }
 }

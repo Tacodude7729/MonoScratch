@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.CSharp;
 
 using System.CodeDom.Compiler; // TODO Use this to compile output automagically
+using static MonoScratch.Compiler.EventBlocks;
 
 namespace MonoScratch.Compiler {
 
@@ -21,6 +22,7 @@ namespace MonoScratch.Compiler {
 
         public readonly ItmScratchStage Stage;
         public readonly Dictionary<string, ItmScratchSprite> Sprites;
+        public readonly Dictionary<string, ItmScratchBroadcast> Broadcasts;
 
         private readonly CSharpCodeProvider _codeProvider;
 
@@ -43,6 +45,8 @@ namespace MonoScratch.Compiler {
             SourceSymbols = new Dictionary<string, int>();
 
             Sprites = new Dictionary<string, ItmScratchSprite>();
+            Broadcasts = new Dictionary<string, ItmScratchBroadcast>();
+
             Stage = new ItmScratchStage(this, project.Stage);
             foreach (ScratchSprite sprite in Project.Sprites) {
                 Sprites.Add(sprite.Name, new ItmScratchSprite(this, sprite));
@@ -96,6 +100,13 @@ namespace MonoScratch.Compiler {
 
         public ItmScratchList GetList(BlockField field) {
             return GetList(field.ID) ?? throw new SystemException($"Couldn't find list {field.Name}.");
+        }
+
+        public ItmScratchBroadcast GetOrCreateBroadcast(BlockField broadcastField) {
+            if (broadcastField.ID == null) throw new SystemException("No ID on broadcast field!");
+            if (Broadcasts.TryGetValue(broadcastField.ID, out ItmScratchBroadcast? value))
+                return value;
+            return Broadcasts[broadcastField.ID] = new ItmScratchBroadcast(this, broadcastField.Name, broadcastField.ID);
         }
 
         public string GetNextSymbol(string rawName, bool fixCapitols = true) {
