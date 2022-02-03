@@ -14,30 +14,34 @@ namespace MonoScratch.Runtime {
     public class MonoScratchRenderer {
 
         public readonly MonoScratchRuntime Runtime;
-        public readonly SpriteBatch SpriteBatch;
 
         public readonly int PixelScale;
         public int Width, Height;
 
         public GraphicsDevice GraphicsDevice => Runtime.GraphicsDevice;
 
-        public readonly Effect SpriteShader;
-        public readonly EffectParameter SpriteShaderBrightnessEffect;
+        public readonly RenderTarget2D Canvas;
+        public readonly SpriteBatch CanvasSpriteBatch;
 
+        public readonly SpriteBatch CostumeSpriteBatch;
+        public readonly Effect CostumeShader;
+        public readonly EffectParameter CostumeShaderBrightnessEffect;
 
         private float _aspectRatio;
 
         public MonoScratchRenderer(MonoScratchRuntime runtime) {
             Runtime = runtime;
 
-            SpriteBatch = new SpriteBatch(Runtime.GraphicsDevice);
-
             Width = 480;
             Height = 360;
             PixelScale = 3;
 
-            SpriteShader = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/Sprite.mgfx"));
-            SpriteShaderBrightnessEffect = SpriteShader.Parameters["BrightnessEffect"] ?? throw new SystemException("Missing parameter on shader!");
+            Canvas = new RenderTarget2D(GraphicsDevice, Width * PixelScale, Height * PixelScale, false, GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.None);
+            CanvasSpriteBatch = new SpriteBatch(GraphicsDevice);
+
+            CostumeSpriteBatch = new SpriteBatch(Runtime.GraphicsDevice);
+            CostumeShader = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/Sprite.mgfx"));
+            CostumeShaderBrightnessEffect = CostumeShader.Parameters["BrightnessEffect"] ?? throw new SystemException("Missing parameter on shader!");
 
             PenCanvas = new RenderTarget2D(GraphicsDevice, Width, Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             _penLineEffect = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/PenLine.mgfx"));
@@ -47,36 +51,46 @@ namespace MonoScratch.Runtime {
             _aspectRatio = ((float)Height) / Width;
 
             _penLineEffectCanvasSize.SetValue(new Vector2(Width, Height));
-
-            PenClear();
-            PenDrawLine(150, -80, -150, -80, 2, 1, 0, 0);
-            PenDrawLine(-150, 80, 150, -80, 20, 0, 0, 0);
-            PenDrawLine(0, 0, -200, 0, 50, 0, 1, 0);
-            PenFlush();
         }
 
         public void Render() {
 
-            // VertexPositionColorTexture
-            GraphicsDevice.SetRenderTarget(null);
+            // Render Pen
+            PenRender();
+
+            // Render Canvas (Background, Pen and Sprites)
+            GraphicsDevice.SetRenderTarget(Canvas);
             GraphicsDevice.Clear(Color.White);
-            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
-            SpriteShader.CurrentTechnique.Passes[0].Apply();
+            CostumeSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+            CostumeShader.CurrentTechnique.Passes[0].Apply();
+            foreach (IMonoScratchTarget target in Runtime.Targets.Backward()) {
+                RenderTarget(target);
 
-            Runtime.Stage.DrawStage(this);
-            SpriteBatch.Draw(PenCanvas, new Rectangle(0, 0, Width * PixelScale, Height * PixelScale), null, Color.White);
-            foreach (IMonoScratchSprite sprite in Runtime.Targets.Backward())
-                sprite.DrawSprite(this);
+                if (target is IMonoScratchStage)
+                    CostumeSpriteBatch.Draw(PenCanvas, new Rectangle(0, 0, Width * PixelScale, Height * PixelScale), null, Color.White);
+            }
+            CostumeSpriteBatch.End();
 
-            SpriteBatch.End();
+            // Put the Canvas onto the Backbuffer
+            GraphicsDevice.SetRenderTarget(null);
+            CanvasSpriteBatch.Begin();
+            CanvasSpriteBatch.Draw(Canvas, Vector2.Zero, null, Color.White);
+            CanvasSpriteBatch.End();
         }
 
-        public void RenderCostume(MonoScratchCostume costume, int x, int y, int rotation, int scale) {
-            SpriteBatch.Draw(costume.Texture,
+        private void RenderTarget(IMonoScratchTarget target) {
+            MonoScratchCostume costume = target.CurrentCostume;
+            int x = target.RenderX;
+            int y = target.RenderY;
+            int rotation = target.RenderRotation;
+
+            float scale = PixelScale * target.RenderScale / costume.BitmapResolution;
+
+            CostumeSpriteBatch.Draw(costume.Texture,
                 new Vector2(PixelScale * (x + Width / 2f), PixelScale * (Height / 2f - y)),
                 null, Color.White,
                 (float)(Math.PI * (rotation - 90) / 180), costume.RotationCenter,
-                new Vector2(PixelScale * (scale / 100f) / costume.BitmapResolution, PixelScale * (scale / 100f) / costume.BitmapResolution),
+                new Vector2(scale),
                 SpriteEffects.None, 0);
         }
 
@@ -140,16 +154,18 @@ namespace MonoScratch.Runtime {
             GraphicsDevice.Clear(Color.Transparent);
         }
 
-        private void PenFlush() {
-            GraphicsDevice.SetRenderTarget(PenCanvas);
+        private void PenRender() {
+            if (_penLineBuffer.Count != 0) {
+                GraphicsDevice.SetRenderTarget(PenCanvas);
 
-            GraphicsDevice.BlendState = BlendState.AlphaBlend;
-            GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                GraphicsDevice.BlendState = BlendState.AlphaBlend;
+                GraphicsDevice.DepthStencilState = DepthStencilState.None;
 
-            _penLineEffect.CurrentTechnique.Passes[0].Apply();
-            GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _penLineBuffer.ToArray(), 0, _penLineBuffer.Count / 3);
+                _penLineEffect.CurrentTechnique.Passes[0].Apply();
+                GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _penLineBuffer.ToArray(), 0, _penLineBuffer.Count / 3);
 
-            _penLineBuffer.Clear();
+                _penLineBuffer.Clear();
+            }
         }
 
     }

@@ -3,30 +3,33 @@ using MonoScratch.Project;
 using System.Collections.Generic;
 using System;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoScratch.Runtime {
 
     public class MonoScratchRuntime : Game {
+        public readonly List<MonoScratchThread> Threads;
 
-        public List<MonoScratchThread> Threads;
+        public readonly List<IMonoScratchSprite> DefaultSprites;
+        public readonly IMonoScratchStage Stage;
+        public readonly ProjectSettings Settings;
 
-        public List<IMonoScratchSprite> DefaultSprites;
-        public IMonoScratchStage Stage;
-
-        public TargetLinkedList Targets;
+        public readonly TargetLinkedList Targets;
 
         public readonly GraphicsDeviceManager Graphics;
         public readonly MonoScratchRenderer Renderer;
+
+        public bool RedrawRequested;
 
         public MonoScratchRuntime() {
             Threads = new List<MonoScratchThread>();
             DefaultSprites = Interface.GetSprites();
             Stage = Interface.GetStage();
             Targets = new TargetLinkedList();
+            Settings = Interface.GetSettings();
 
             foreach (IMonoScratchSprite sprite in DefaultSprites)
-                Targets.InsertLast(sprite);
+                sprite.LayerNode = Targets.InsertLast(sprite);
+            Targets.InsertLast(Stage);
 
             Graphics = new GraphicsDeviceManager(this);
 
@@ -36,6 +39,9 @@ namespace MonoScratch.Runtime {
             Graphics.ApplyChanges();
 
             Renderer = new MonoScratchRenderer(this);
+
+            IsFixedTimeStep = true;
+            TargetElapsedTime = TimeSpan.FromSeconds(1d / Settings.FPS);
         }
 
         protected override void Initialize() {
@@ -46,21 +52,51 @@ namespace MonoScratch.Runtime {
             base.Initialize();
         }
 
-        public void Step() {
-            foreach (IMonoScratchSprite sprite in DefaultSprites) {
-                sprite.OnGreenFlag();
-            }
-            Stage.OnGreenFlag();
+        public void OnGreenFlag() {
+            foreach (IMonoScratchTarget target in Targets.Forward())
+                target.OnGreenFlag();
+        }
 
-            while (Threads.Count != 0) {
-                foreach (MonoScratchThread thread in Threads) {
-                    thread.Step();
+        public void Step() {
+            int numActiveThreads = 1;
+            bool ranFirstTick = false;
+
+            while (Threads.Count != 0
+                && numActiveThreads != 0
+                && (RedrawRequested || Settings.TurboMode)
+            ) {
+                numActiveThreads = 0;
+                bool removedThread = false;
+
+                for (int i = 0; i < Threads.Count; i++) {
+                    MonoScratchThread thread = Threads[i];
+
+                    if (!ranFirstTick && thread.Status == ThreadStatus.YIELD_TICK) {
+                        thread.Status = ThreadStatus.YIELD;
+                    }
+
+                    if (thread.Status == ThreadStatus.YIELD) {
+                        thread.Step();
+                    }
+
+                    if (thread.Status == ThreadStatus.DONE) {
+                        removedThread = true;
+                    }
+
+                    if (thread.Status == ThreadStatus.YIELD) {
+                        ++numActiveThreads;
+                    }
                 }
-                Threads.RemoveAll(thread => thread.Status == ThreadStatus.DONE);
+
+                ranFirstTick = true;
+
+                if (removedThread)
+                    Threads.RemoveAll(thread => thread.Status == ThreadStatus.DONE);
             }
         }
 
         protected override void Update(GameTime gameTime) {
+            Step();
             base.Update(gameTime);
         }
 

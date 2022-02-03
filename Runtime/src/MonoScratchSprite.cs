@@ -6,19 +6,17 @@ namespace MonoScratch.Runtime {
 
     public interface IMonoScratchSprite : IMonoScratchTarget {
 
-        public int X { get; set; }
-        public int Y { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
 
         public bool Visible { get; set; }
 
-        public int Size { get; set; }
-        public int Direction { get; set; }
+        public double Size { get; set; }
+        public double Direction { get; set; }
         // public bool Draggable; TODO
         // public string RotationStyle; TODO
 
         public TargetLinkedList.Node? SpriteListNode { get; set; }
-
-        public void DrawSprite(MonoScratchRenderer renderer);
     }
 
     public abstract class MonoScratchSprite<T> : MonoScratchTarget<T>, IMonoScratchSprite where T : MonoScratchSprite<T>, IMonoScratchSprite, new() {
@@ -28,17 +26,18 @@ namespace MonoScratch.Runtime {
             Clones = new List<T>();
         }
 
-        public int X { get; set; }
-        public int Y { get; set; }
-
         public bool Visible { get; set; }
 
-        public int Size { get; set; }
-        public int Direction { get; set; }
-        public TargetLinkedList.Node? SpriteListNode { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Size { get; set; }
+        public double Direction { get; set; }
 
-        public void DrawSprite(MonoScratchRenderer renderer) {
-            renderer.RenderCostume(CurrentCostume, X, Y, Direction, Size);
-        }
+        public override int RenderX => (int) Math.Round(X);
+        public override int RenderY => (int) Math.Round(Y);
+        public override int RenderRotation => (int) Math.Round(Direction);
+        public override float RenderScale => (float) (Size / 100);
+
+        public TargetLinkedList.Node? SpriteListNode { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using static MonoScratch.Compiler.EventBlocks;
 
 namespace MonoScratch.Compiler {
@@ -33,6 +34,21 @@ namespace MonoScratch.Compiler {
             ctx.Source.AppendLine("public static partial IMonoScratchStage GetStage()");
             ctx.Source.PushBlock();
             ctx.Source.AppendLine($"return {ctx.Stage.ClassName}.Instance;");
+            ctx.Source.PopBlock();
+
+            // GetSettings()
+            ctx.Source.AppendLine();
+            ctx.Source.AppendLine("public static partial ProjectSettings GetSettings()");
+            ctx.Source.PushBlock();
+            
+            StringBuilder settings = new StringBuilder("return new ProjectSettings(");
+
+            settings.Append("false, "); // TurboMode
+            settings.Append("30"); // FPS
+
+            settings.Append(");");
+            
+            ctx.Source.AppendLine(settings.ToString());
             ctx.Source.PopBlock();
 
             ctx.Source.PopBlock();

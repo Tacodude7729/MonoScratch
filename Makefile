@@ -1,7 +1,8 @@
 
 all: build run
 
-export MGFXC_WINE_PATH = /home/zach/.local/share/wineprefixes/monogame
+include .env
+export
 
 run:
 	cd Build && dotnet run
