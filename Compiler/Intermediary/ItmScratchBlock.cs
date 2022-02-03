@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ScratchSharp.Project;
 
 namespace MonoScratch.Compiler {
@@ -31,23 +32,37 @@ namespace MonoScratch.Compiler {
             => throw new NotImplementedException($"Can't evaluate block '{Opcode}'.");
     }
 
-    public class ItmScratchHatBlock : ItmScratchBlock {
+    public abstract class ItmScratchHatBlock : ItmScratchBlock {
         public readonly string ListenerMethodName;
-        public readonly string MethodName;
-
-        public virtual bool ReturnThreads => false;
+        public abstract string RunnerMethodName { get; }
 
         public ItmScratchHatBlock(SourceGeneratorContext ctx, ScratchBlock block, string method) : base(block) {
-            MethodName = ctx.GetNextSymbol(method + "Listener");
-            ListenerMethodName = "On" + method;
-        }
-
-        public virtual void AppendMethodHeader(SourceGeneratorContext ctx) {
-            ctx.Source.AppendLine($"public IEnumerable<YieldReason> {MethodName}()");
+            ListenerMethodName = ctx.GetNextSymbol(method);
         }
 
         public virtual void AppendListenerMethodHeader(SourceGeneratorContext ctx) {
-            ctx.Source.AppendLine($"public {(ReturnThreads ? "IEnumerable<MonoScratchThread>" : "void")} {ListenerMethodName}()");
+            ctx.Source.AppendLine($"public IEnumerable<YieldReason> {ListenerMethodName}()");
+        }
+
+        public abstract void AppendRunnerMethod(SourceGeneratorContext ctx, List<ItmScratchHatBlock> hats);
+    }
+
+    public class ItmScratchSimpleHatBlock : ItmScratchHatBlock {
+        public override string RunnerMethodName { get; }
+
+        public ItmScratchSimpleHatBlock(SourceGeneratorContext ctx, ScratchBlock block, string method) : base(ctx, block, method + "Listener") {
+            RunnerMethodName = ctx.GetNextSymbol("On " + method);
+        }
+
+        public override void AppendRunnerMethod(SourceGeneratorContext ctx, List<ItmScratchHatBlock> hats) {
+            ctx.Source.AppendLine($"public void {RunnerMethodName}()");
+            ctx.Source.PushBlock();
+
+            foreach (ItmScratchHatBlock hat in hats) {
+                ctx.Source.AppendLine($"Utils.StartThread({hat.ListenerMethodName});");
+            }
+
+            ctx.Source.PopBlock();
         }
     }
 

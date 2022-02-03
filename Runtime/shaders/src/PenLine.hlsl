@@ -58,8 +58,6 @@ VertexShaderOutput MainVS(VertexShaderInput input) {
 	output.LineLengthThickness = input.LineLengthThickness;
 	output.LineColor = input.LineColor;
 
-	// output.Position = float4(input.Position, 0.0);
-
 	return output;
 }
 
@@ -70,8 +68,6 @@ float4 MainPS(VertexShaderOutput input) : COLOR {
 	ln -= ((input.LineLengthThickness.y - 1.0) * 0.5);
 
 	return input.LineColor * clamp(1.0 - ln, 0.0, 1.0);
-
-	// return float4(1.0, 0.0, 0.0, 1.0);
 }
 
 technique LineDrawing {

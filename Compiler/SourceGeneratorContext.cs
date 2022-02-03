@@ -109,6 +109,18 @@ namespace MonoScratch.Compiler {
             return Broadcasts[broadcastField.ID] = new ItmScratchBroadcast(this, broadcastField.Name, broadcastField.ID);
         }
 
+
+        public ItmScratchBroadcast GetOrCreateBroadcast(BlockInput broadcastInput) {
+            return GetOrCreateBroadcast((broadcastInput.Block as BlockInputPrimitiveBroadcast)
+                ?? throw new SystemException("Expected broadcast input, got "+broadcastInput));
+        }
+
+        public ItmScratchBroadcast GetOrCreateBroadcast(BlockInputPrimitiveBroadcast broadcastInput) {
+            if (Broadcasts.TryGetValue(broadcastInput.ID, out ItmScratchBroadcast? value))
+                return value;
+            return Broadcasts[broadcastInput.ID] = new ItmScratchBroadcast(this, broadcastInput.Name, broadcastInput.ID);
+        }
+
         public string GetNextSymbol(string rawName, bool fixCapitols = true) {
             StringBuilder sb = new StringBuilder();
             bool whiteSpace = true;

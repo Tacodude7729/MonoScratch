@@ -7,7 +7,7 @@ namespace MonoScratch.Compiler {
     public static class EventBlocks {
 
         public static ItmScratchHatBlock CreateGreenFlagClicked(SourceGeneratorContext ctx, ScratchBlock scratchBlock) {
-            return new ItmScratchHatBlock(ctx, scratchBlock, "GreenFlag");
+            return new ItmScratchSimpleHatBlock(ctx, scratchBlock, "GreenFlag");
         }
 
         public class ItmScratchBroadcast {
@@ -27,15 +27,24 @@ namespace MonoScratch.Compiler {
 
         public class BroadcastReceivedBlock : ItmScratchHatBlock {
             public readonly ItmScratchBroadcast Broadcast;
+            public override string RunnerMethodName { get; }
 
-            public override bool ReturnThreads => true;
-
-            public BroadcastReceivedBlock(SourceGeneratorContext ctx, ScratchBlock block, ItmScratchBroadcast broadcast) : base(ctx, block, broadcast.CodeName) {
+            public BroadcastReceivedBlock(SourceGeneratorContext ctx, ScratchBlock block, ItmScratchBroadcast broadcast) : base(ctx, block, broadcast.CodeName + "Listener") {
                 Broadcast = broadcast;
+                RunnerMethodName = broadcast.RunListenersName;
             }
 
-            public override void AppendListenerMethodHeader(SourceGeneratorContext ctx) {
-                ctx.Source.AppendLine($"IEnumerable<MonoScratchThread> ProjectEvents.{ListenerMethodName}()");
+            public override void AppendRunnerMethod(SourceGeneratorContext ctx, List<ItmScratchHatBlock> hats) {
+                ctx.Source.AppendLine($"MonoScratchThread[] ProjectEvents.{RunnerMethodName}()");
+                ctx.Source.PushBlock();
+                ctx.Source.AppendLine("return new MonoScratchThread[] {");
+                ctx.Source.PushIndent();
+                for (int i = 0; i < hats.Count; i++) {
+                    ctx.Source.AppendLine($"Utils.StartThread({hats[i].ListenerMethodName}){(i == hats.Count - 1 ? "" : ",")}");
+                }
+                ctx.Source.PopIndent();
+                ctx.Source.AppendLine("};");
+                ctx.Source.PopBlock();
             }
 
             public static BroadcastReceivedBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) {
@@ -52,14 +61,32 @@ namespace MonoScratch.Compiler {
             }
 
             public override void AppendExecute(SourceGeneratorContext ctx) {
-                
+                string target = ctx.GetNextSymbol("target", false);
+                ctx.Source.AppendLine($"foreach (IMonoScratchTarget {target} in Program.Runtime.Targets.Forward()) {target}.{Broadcast.RunListenersName}();");
             }
 
             public static BroadcastBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) {
-                ItmScratchBroadcast broadcast = ctx.GetOrCreateBroadcast(scratchBlock.Fields["BROADCAST_INPUT"]);
+                ItmScratchBroadcast broadcast = ctx.GetOrCreateBroadcast(scratchBlock.Inputs["BROADCAST_INPUT"]);
                 return new BroadcastBlock(scratchBlock, broadcast);
             }
         }
 
     }
 }
+
+
+/*
+        MonoScratchThread[][] receivers = new MonoScratchThread[Program.Runtime.Targets.Count][];
+        int index = 0;
+        foreach (IMonoScratchTarget target in Program.Runtime.Targets.Forward()) {
+            receivers[index++] = target.OnBroadcastMessage1_();
+        }
+        for (index = 0; index < receivers.Length; index++) {
+            MonoScratchThread[] receiverThreads = receivers[index];
+            for (int j = 0; j < receiverThreads.Length; j++) {
+                while (receiverThreads[j].Status != ThreadStatus.DONE)
+                    yield return YieldReason.HARD_YIELD; // hard yield?
+            }
+        }
+
+ */

@@ -14,6 +14,7 @@ namespace MonoScratch.Compiler {
 
             AddBlock("event_whenflagclicked", EventBlocks.CreateGreenFlagClicked);
             AddBlock("event_whenbroadcastreceived", EventBlocks.BroadcastReceivedBlock.Create);
+            AddBlock("event_broadcast", EventBlocks.BroadcastBlock.Create);
 
             AddBlock("control_repeat", ControlBlocks.RepeatBlock.Create);
 

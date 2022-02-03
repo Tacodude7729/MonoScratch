@@ -44,11 +44,11 @@ namespace MonoScratch.Compiler {
                     continue;
                 }
                 Blocks.Add(block.ID, itmBlock);
-                if (itmBlock is ItmScratchHatBlock hat) {
-                    HatBlockMap.TryGetValue(hat.ListenerMethodName, out List<ItmScratchHatBlock>? hats);
+                if (itmBlock is ItmScratchHatBlock hat && hat.Block.NextID != null) {
+                    HatBlockMap.TryGetValue(hat.RunnerMethodName, out List<ItmScratchHatBlock>? hats);
                     if (hats == null) {
                         hats = new List<ItmScratchHatBlock>();
-                        HatBlockMap.Add(hat.ListenerMethodName, hats);
+                        HatBlockMap.Add(hat.RunnerMethodName, hats);
                     }
                     hats.Add(hat);
                 } else if (itmBlock is ProcedureBlocks.DefinitionBlock procDef) {
@@ -115,26 +115,16 @@ namespace MonoScratch.Compiler {
 
             // Event Hat Blocks
             foreach (KeyValuePair<string, List<ItmScratchHatBlock>> hats in HatBlockMap) {
-                ItmScratchHatBlock firstHat = hats.Value[0];
-
-                firstHat.AppendListenerMethodHeader(ctx);
-                ctx.Source.PushBlock();
-                foreach (ItmScratchHatBlock hat in hats.Value) { // TODO Order
-                    if (hat.Block.NextID != null)
-                        ctx.Source.AppendLine($"{(firstHat.ReturnThreads ? "yield return " : "")}Utils.StartThread({hat.MethodName});");
-                }
-                ctx.Source.PopBlock();
+                hats.Value[0].AppendRunnerMethod(ctx, hats.Value);
                 ctx.Source.AppendLine();
 
                 foreach (ItmScratchHatBlock hat in hats.Value) {
-                    if (hat.Block.NextID != null) {
-                        hat.AppendMethodHeader(ctx);
-                        ctx.Source.PushBlock();
-                        ctx.AppendBlocks(hat.Block.NextID);
-                        ctx.Source.AppendLine("yield break;");
-                        ctx.Source.PopBlock();
-                        ctx.Source.AppendLine();
-                    }
+                    hat.AppendListenerMethodHeader(ctx);
+                    ctx.Source.PushBlock();
+                    ctx.AppendBlocks(hat.Block.NextID!); // Null checked above
+                    ctx.Source.AppendLine("yield break;");
+                    ctx.Source.PopBlock();
+                    ctx.Source.AppendLine();
                 }
             }
             ctx.Source.AppendLine();
