@@ -1,8 +1,20 @@
 using ScratchSharp.Project;
 using System;
+using System.Collections.Generic;
 
 namespace MonoScratch.Compiler {
     public abstract class ItmScratchBlockInput {
+
+        public static readonly ItmScratchBlockInput EMPTY = new RawBlockInput("");
+
+        public static ItmScratchBlockInput From(Dictionary<string, BlockInput> inputs, string input) {
+            return From(inputs, input, EMPTY);
+        }
+
+        public static ItmScratchBlockInput From(Dictionary<string, BlockInput> inputs, string input, ItmScratchBlockInput alt) {
+            if (inputs.ContainsKey(input)) return From(inputs[input]);
+            return alt;
+        }
 
         public static ItmScratchBlockInput From(BlockInput input) {
             return From(input.Block);
@@ -31,6 +43,10 @@ namespace MonoScratch.Compiler {
             Value = input.Value;
         }
 
+        public RawBlockInput(string value) {
+            Value = value;
+        }
+
         public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
             switch (type) {
                 case BlockReturnType.STRING:
@@ -42,7 +58,7 @@ namespace MonoScratch.Compiler {
                 case BlockReturnType.VALUE:
                     return $"new MonoScratchValue({BlockUtils.StringToNumString(Value)})";
                 case BlockReturnType.BOOLEAN:
-                    break;
+                    return BlockUtils.StringToBool(Value);
             }
             throw new SystemException($"Cannot convert raw input to {type}.");
         }

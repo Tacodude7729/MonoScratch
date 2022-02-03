@@ -18,7 +18,19 @@ namespace MonoScratch.Compiler {
 
             AddBlock("control_repeat", ControlBlocks.RepeatBlock.Create);
 
-            AddBlock("operator_add", OperatorBlocks.AddBlock.Create);
+            AddBlock("operator_add", OperatorBlocks.CreateAddBlock);
+            AddBlock("operator_subtract", OperatorBlocks.CreateSubtractBlock);
+            AddBlock("operator_multiply", OperatorBlocks.CreateMultiplyBlock);
+            AddBlock("operator_divide", OperatorBlocks.CreateDevideBlock);
+            AddBlock("operator_gt", OperatorBlocks.CreateGraterThanBlock);
+            AddBlock("operator_lt", OperatorBlocks.CreateLessThanBlock);
+            AddBlock("operator_equals", OperatorBlocks.CreateEqualsBlock);
+            AddBlock("operator_and", OperatorBlocks.CreateAndBlock);
+            AddBlock("operator_or", OperatorBlocks.CreateOrBlock);
+            AddBlock("operator_not", OperatorBlocks.NotBlock.Create);
+            AddBlock("operator_join", OperatorBlocks.JoinBlock.Create);
+            AddBlock("operator_mod", OperatorBlocks.CreateModBlock);
+            AddBlock("operator_round", OperatorBlocks.RoundBlock.Create);
 
             AddBlock("data_setvariableto", DataBlocks.SetVariableToBlock.Create);
             AddBlock("data_changevariableby", DataBlocks.ChangeVariableByBlock.Create);

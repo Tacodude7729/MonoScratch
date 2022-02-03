@@ -19,6 +19,12 @@ namespace MonoScratch.Compiler {
             return SourceGenerator.StringValue(value);
         }
 
+        public static string StringToBool(string value) {
+            if (!(value == "" || value == "0" || value == "false"))
+                return "true";
+            return "false";
+        }
+
         public static double StringToNum(string _stringValue) {
             if (double.TryParse(_stringValue, Styles, null, out double numberValue))
                 return double.IsNaN(numberValue) ? 0 : numberValue;

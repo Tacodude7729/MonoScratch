@@ -4,7 +4,7 @@ namespace MonoScratch.Runtime {
     public class MonoScratchValue {
 
         public static MonoScratchValue ZERO = new MonoScratchValue(0);
-        
+
         // Changes to this should be synced with BlockUtils in Compiler
         public const NumberStyles Styles =
             NumberStyles.AllowDecimalPoint |
@@ -83,6 +83,26 @@ namespace MonoScratch.Runtime {
             return Compare(this, other);
         }
 
+        public static int Compare(double v1, double v2) {
+            v1 -= v2;
+            return v1 < 0 ? -1 : (v1 == 0 ? 0 : 1);
+        }
+
+        public static int Compare(string v1, string v2) {
+            double n1;
+            if (!double.TryParse(v1, Styles, null, out n1))
+                n1 = double.NaN;
+
+            double n2;
+            if (!double.TryParse(v2, Styles, null, out n2))
+                n2 = double.NaN;
+
+            if (double.IsNaN(n1) || double.IsNaN(n2))
+                return string.Compare(v1.ToLower(), v2.ToLower());
+
+            return Compare(n1, n2);
+        }
+
         public static int Compare(MonoScratchValue v1, MonoScratchValue v2) {
             double n1;
             if (v1._stringValue != null) {
@@ -101,8 +121,12 @@ namespace MonoScratch.Runtime {
             if (double.IsNaN(n1) || double.IsNaN(n2))
                 return string.Compare(v1.AsString().ToLower(), v2.AsString().ToLower());
 
-            n1 -= n2;
-            return n1 < 0 ? -1 : (n1 == 0 ? 0 : 1);
+            return Compare(n1, n2);
         }
+
+        public static implicit operator MonoScratchValue(double value) => new MonoScratchValue(value);
+        public static implicit operator MonoScratchValue(string value) => new MonoScratchValue(value);
+        public static implicit operator MonoScratchValue(bool value) => new MonoScratchValue(value);
+
     }
 }
