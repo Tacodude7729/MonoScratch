@@ -12,11 +12,18 @@ namespace MonoScratch.Compiler {
         static ScratchBlocks() {
             _blocks = new Dictionary<string, BlockType>();
 
+            AddBlock("motion_gotoxy", MotionBlocks.GotoXYBlock.Create);
+            AddBlock("motion_changexby", MotionBlocks.ChangeXByBlock.Create);
+            AddBlock("motion_setx", MotionBlocks.GotoXBlock.Create);
+            AddBlock("motion_changeyby", MotionBlocks.ChangeYByBlock.Create);
+            AddBlock("motion_sety", MotionBlocks.GotoYBlock.Create);
+
             AddBlock("event_whenflagclicked", EventBlocks.CreateGreenFlagClicked);
             AddBlock("event_whenbroadcastreceived", EventBlocks.BroadcastReceivedBlock.Create);
             AddBlock("event_broadcast", EventBlocks.BroadcastBlock.Create);
 
             AddBlock("control_repeat", ControlBlocks.RepeatBlock.Create);
+            AddBlock("control_if", ControlBlocks.IfBlock.Create);
 
             AddBlock("operator_add", OperatorBlocks.CreateAddBlock);
             AddBlock("operator_subtract", OperatorBlocks.CreateSubtractBlock);

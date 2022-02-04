@@ -40,7 +40,7 @@ namespace MonoScratch.Compiler {
                 ctx.Source.AppendLine("return new MonoScratchThread[] {");
                 ctx.Source.PushIndent();
                 for (int i = 0; i < hats.Count; i++) {
-                    ctx.Source.AppendLine($"Utils.StartThread({hats[i].ListenerMethodName}){(i == hats.Count - 1 ? "" : ",")}");
+                    ctx.Source.AppendLine($"Program.Runtime.StartThread({hats[i].ListenerMethodName}, true){(i == hats.Count - 1 ? "" : ",")}");
                 }
                 ctx.Source.PopIndent();
                 ctx.Source.AppendLine("};");

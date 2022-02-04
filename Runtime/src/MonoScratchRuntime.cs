@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework;
 namespace MonoScratch.Runtime {
 
     public class MonoScratchRuntime : Game {
-        public readonly List<MonoScratchThread> Threads;
 
         public readonly List<IMonoScratchSprite> DefaultSprites;
         public readonly IMonoScratchStage Stage;
@@ -18,14 +17,19 @@ namespace MonoScratch.Runtime {
         public readonly GraphicsDeviceManager Graphics;
         public readonly MonoScratchRenderer Renderer;
 
+        private readonly List<MonoScratchThread> _threads;
+        private readonly Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread> _threadFuncMap;
+
         public bool RedrawRequested;
 
         public MonoScratchRuntime() {
-            Threads = new List<MonoScratchThread>();
             DefaultSprites = Interface.GetSprites();
             Stage = Interface.GetStage();
             Targets = new TargetLinkedList();
             Settings = Interface.GetSettings();
+
+            _threads = new List<MonoScratchThread>();
+            _threadFuncMap = new Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread>();
 
             foreach (IMonoScratchSprite sprite in DefaultSprites)
                 sprite.LayerNode = Targets.InsertLast(sprite);
@@ -54,6 +58,19 @@ namespace MonoScratch.Runtime {
             OnGreenFlag();
         }
 
+        public MonoScratchThread StartThread(MonoScratchThread.ScratchFunction function, bool restartExisting) {
+            if (_threadFuncMap.TryGetValue(function, out MonoScratchThread? thread)) {
+                if (restartExisting) {
+                    thread.Restart();
+                }
+                return thread;
+            }
+            thread = new MonoScratchThread(function);
+            _threads.Add(thread);
+            _threadFuncMap.Add(function, thread);
+            return thread;
+        }
+
         public void OnGreenFlag() {
             foreach (IMonoScratchTarget target in Targets.Forward())
                 target.OnGreenFlag();
@@ -63,15 +80,15 @@ namespace MonoScratch.Runtime {
             int numActiveThreads = 1;
             bool ranFirstTick = false;
 
-            while (Threads.Count != 0
+            while (_threads.Count != 0
                 && numActiveThreads != 0
                 && (!RedrawRequested || Settings.TurboMode)
             ) {
                 numActiveThreads = 0;
                 bool removedThread = false;
 
-                for (int i = 0; i < Threads.Count; i++) {
-                    MonoScratchThread thread = Threads[i];
+                for (int i = 0; i < _threads.Count; i++) {
+                    MonoScratchThread thread = _threads[i];
 
                     if (!ranFirstTick && thread.Status == ThreadStatus.YIELD_TICK) {
                         thread.Status = ThreadStatus.YIELD;
@@ -93,7 +110,13 @@ namespace MonoScratch.Runtime {
                 ranFirstTick = true;
 
                 if (removedThread)
-                    Threads.RemoveAll(thread => thread.Status == ThreadStatus.DONE);
+                    _threads.RemoveAll(thread => {
+                        if (thread.Status == ThreadStatus.DONE) {
+                            _threadFuncMap.Remove(thread.Function);
+                            return true;
+                        }
+                        return false;
+                    });
             }
         }
 
@@ -104,6 +127,7 @@ namespace MonoScratch.Runtime {
 
         protected override void Draw(GameTime gameTime) {
             Renderer.Render();
+            RedrawRequested = false;
             base.Draw(gameTime);
         }
     }

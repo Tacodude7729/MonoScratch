@@ -34,9 +34,30 @@ namespace MonoScratch.Compiler {
                 ctx.Source.PopBlock();
             }
 
-            public static RepeatBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) {
-                return new RepeatBlock(scratchBlock);
+            public static RepeatBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+                new RepeatBlock(scratchBlock);
+        }
+
+        public abstract class ConditionalSubstackBlock : SubstackBlock {
+            public readonly ItmScratchBlockInput Condition;
+
+            public ConditionalSubstackBlock(ScratchBlock block) : base(block) {
+                Condition = ItmScratchBlockInput.From(block.Inputs["CONDITION"]);
             }
+        }
+
+        public class IfBlock : ConditionalSubstackBlock {
+            public IfBlock(ScratchBlock block) : base(block) { }
+
+            public override void AppendExecute(SourceGeneratorContext ctx) {
+                ctx.Source.AppendLine($"if ({Condition.GetCode(ctx, BlockReturnType.BOOLEAN)})");
+                ctx.Source.PushBlock();
+                Substack.AppendExecute(ctx);
+                ctx.Source.PopBlock();
+            }
+
+            public static IfBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+                new IfBlock(scratchBlock);
         }
     }
 }

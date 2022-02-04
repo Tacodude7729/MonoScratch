@@ -83,9 +83,19 @@ namespace MonoScratch.Runtime {
             return Compare(this, other);
         }
 
-        public static int Compare(double v1, double v2) {
-            v1 -= v2;
-            return v1 < 0 ? -1 : (v1 == 0 ? 0 : 1);
+        private static int CompareNotNaN(double n1, double n2) {
+            n1 -= n2;
+            return n1 < 0 ? -1 : (n1 == 0 ? 0 : 1);
+        }
+
+        private static int CompareStrings(string s1, string s2) {
+            return string.Compare(s1.ToLower(), s2.ToLower());
+        }
+
+        public static int Compare(double n1, double n2) {
+            if (double.IsNaN(n1) || double.IsNaN(n2))
+                return string.Compare(n1.ToString(), n2.ToString());
+            return CompareNotNaN(n1, n2);
         }
 
         public static int Compare(string v1, string v2) {
@@ -100,7 +110,31 @@ namespace MonoScratch.Runtime {
             if (double.IsNaN(n1) || double.IsNaN(n2))
                 return string.Compare(v1.ToLower(), v2.ToLower());
 
-            return Compare(n1, n2);
+            return CompareNotNaN(n1, n2);
+        }
+
+        // These two exist to avoid the construction of a MonoScratchValue when comparing
+        //  a MonoScratchValue and a double directly.
+        public static int Compare(MonoScratchValue v1, double n2) {
+            double n1;
+            if (v1._stringValue != null) {
+                if (!double.TryParse(v1._stringValue, Styles, null, out n1))
+                    n1 = double.NaN;
+            } else n1 = v1._numberValue;
+            if (double.IsNaN(n1) || double.IsNaN(n2))
+                return CompareStrings(v1.AsString(), n2.ToString());
+            return CompareNotNaN(n1, n2);
+        }
+
+        public static int Compare(double n1, MonoScratchValue v2) {
+            double n2;
+            if (v2._stringValue != null) {
+                if (!double.TryParse(v2._stringValue, Styles, null, out n2))
+                    n2 = double.NaN;
+            } else n2 = v2._numberValue;
+            if (double.IsNaN(n1) || double.IsNaN(n2))
+                return CompareStrings(n1.ToString(), v2.AsString());
+            return CompareNotNaN(n1, n2);
         }
 
         public static int Compare(MonoScratchValue v1, MonoScratchValue v2) {
@@ -108,20 +142,15 @@ namespace MonoScratch.Runtime {
             if (v1._stringValue != null) {
                 if (!double.TryParse(v1._stringValue, Styles, null, out n1))
                     n1 = double.NaN;
-            } else
-                n1 = v1._numberValue;
-
+            } else n1 = v1._numberValue;
             double n2;
             if (v2._stringValue != null) {
                 if (!double.TryParse(v2._stringValue, Styles, null, out n2))
                     n2 = double.NaN;
-            } else
-                n2 = v2._numberValue;
-
+            } else n2 = v2._numberValue;
             if (double.IsNaN(n1) || double.IsNaN(n2))
-                return string.Compare(v1.AsString().ToLower(), v2.AsString().ToLower());
-
-            return Compare(n1, n2);
+                return CompareStrings(v1.AsString(), v2.AsString());
+            return CompareNotNaN(n1, n2);
         }
 
         public static implicit operator MonoScratchValue(double value) => new MonoScratchValue(value);

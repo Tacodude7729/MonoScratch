@@ -50,6 +50,8 @@ namespace MonoScratch.Compiler {
     public class ItmScratchSimpleHatBlock : ItmScratchHatBlock {
         public override string RunnerMethodName { get; }
 
+        public virtual bool RestartExistingThreads => false;
+
         public ItmScratchSimpleHatBlock(SourceGeneratorContext ctx, ScratchBlock block, string method) : base(ctx, block, method + "Listener") {
             RunnerMethodName = ctx.GetNextSymbol("On " + method);
         }
@@ -59,7 +61,7 @@ namespace MonoScratch.Compiler {
             ctx.Source.PushBlock();
 
             foreach (ItmScratchHatBlock hat in hats) {
-                ctx.Source.AppendLine($"Utils.StartThread({hat.ListenerMethodName});");
+                ctx.Source.AppendLine($"Program.Runtime.StartThread({hat.ListenerMethodName}, {(RestartExistingThreads ? "true" : "false")});");
             }
 
             ctx.Source.PopBlock();

@@ -28,15 +28,31 @@ namespace MonoScratch.Runtime {
 
         public bool Visible { get; set; }
 
-        public double X { get; set; }
-        public double Y { get; set; }
+        private double _x, _y;
+
+        public double X {
+            get => _x; set {
+                if (_x != value) {
+                    if (Visible) Program.Runtime.RedrawRequested = true;
+                }
+                _x = value;
+            }
+        }
+        public double Y {
+            get => _y; set {
+                if (_y != value) {
+                    if (Visible) Program.Runtime.RedrawRequested = true;
+                }
+                _y = value;
+            }
+        }
         public double Size { get; set; }
         public double Direction { get; set; }
 
-        public override int RenderX => (int) Math.Round(X);
-        public override int RenderY => (int) Math.Round(Y);
-        public override int RenderRotation => (int) Math.Round(Direction);
-        public override float RenderScale => (float) (Size / 100);
+        public override int RenderX => (int)Math.Round(_x);
+        public override int RenderY => (int)Math.Round(_y);
+        public override int RenderRotation => (int)Math.Round(Direction);
+        public override float RenderScale => (float)(Size / 100);
 
         public TargetLinkedList.Node? SpriteListNode { get; set; }
     }
