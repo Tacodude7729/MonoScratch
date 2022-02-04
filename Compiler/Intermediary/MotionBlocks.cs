@@ -14,8 +14,7 @@ namespace MonoScratch.Compiler {
 
             public override void AppendExecute(SourceGeneratorContext ctx) {
                 if (ctx.IsInSprite) {
-                    ctx.Source.AppendLine($"X = {X.GetCode(ctx, BlockReturnType.NUMBER)};");
-                    ctx.Source.AppendLine($"Y = {Y.GetCode(ctx, BlockReturnType.NUMBER)};");
+                    ctx.Source.AppendLine($"SetXY({X.GetCode(ctx, BlockReturnType.NUMBER)}, {Y.GetCode(ctx, BlockReturnType.NUMBER)});");
                 }
             }
 

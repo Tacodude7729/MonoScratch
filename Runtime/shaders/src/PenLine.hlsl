@@ -1,3 +1,6 @@
+// 'Just draw lines on the screen' they said.
+// 'It'll be easy' they said...
+
 #if OPENGL
 	#define SV_POSITION POSITION
 	#define VS_SHADERMODEL vs_3_0

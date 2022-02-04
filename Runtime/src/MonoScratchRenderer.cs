@@ -79,19 +79,21 @@ namespace MonoScratch.Runtime {
         }
 
         private void RenderTarget(IMonoScratchTarget target) {
-            MonoScratchCostume costume = target.CurrentCostume;
-            int x = target.RenderX;
-            int y = target.RenderY;
-            int rotation = target.RenderRotation;
+            if (target.RenderVisible) {
+                MonoScratchCostume costume = target.CurrentCostume;
+                int x = target.RenderX;
+                int y = target.RenderY;
+                int rotation = target.RenderRotation;
 
-            float scale = PixelScale * target.RenderScale / costume.BitmapResolution;
+                float scale = PixelScale * target.RenderScale / costume.BitmapResolution;
 
-            CostumeSpriteBatch.Draw(costume.Texture,
-                new Vector2(PixelScale * (x + Width / 2f), PixelScale * (Height / 2f - y)),
-                null, Color.White,
-                (float)(Math.PI * (rotation - 90) / 180), costume.RotationCenter,
-                new Vector2(scale),
-                SpriteEffects.None, 0);
+                CostumeSpriteBatch.Draw(costume.Texture,
+                    new Vector2(PixelScale * (x + Width / 2f), PixelScale * (Height / 2f - y)),
+                    null, Color.White,
+                    (float)(Math.PI * (rotation - 90) / 180), costume.RotationCenter,
+                    new Vector2(scale),
+                    SpriteEffects.None, 0);
+            }
         }
 
         //
@@ -130,15 +132,16 @@ namespace MonoScratch.Runtime {
             public VertexDeclaration VertexDeclaration => _vertexDeclaration;
         }
 
-        public void PenDrawLine(float x0, float y0, float x1, float y1, float lineThickness, float r, float g, float b) {
-            float lineDiffX = x1 - x0;
-            float lineDiffY = y0 - y1;
+        public void PenDrawLine(double x0, double y0, double x1, double y1, double lineThickness, Color color) {
+            float lineDiffX = (float)(x1 - x0);
+            float lineDiffY = (float)(y0 - y1);
             float lineLength = MathF.Sqrt((lineDiffX * lineDiffX) + (lineDiffY * lineDiffY));
 
-            Vector2 linePoint = new Vector2(x0, y0);
+            Vector2 linePoint = new Vector2((float)x0, (float)y0);
             Vector2 linePointDiff = new Vector2(lineDiffX, lineDiffY);
-            Vector2 lineLengthThickness = new Vector2(lineLength, lineThickness);
-            Vector4 lineColor = new Vector4(r, g, b, 1f);
+            Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness);
+            float lineColorAlpha = color.A / 255f;
+            Vector4 lineColor = new Vector4(lineColorAlpha * color.R / 255f, lineColorAlpha * color.G / 255f, lineColorAlpha * color.B / 255f, lineColorAlpha);
 
             _penLineBuffer.Add(new PenStrokeVertex(new Vector2(1f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
             _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
@@ -152,6 +155,7 @@ namespace MonoScratch.Runtime {
         public void PenClear() {
             GraphicsDevice.SetRenderTarget(PenCanvas);
             GraphicsDevice.Clear(Color.Transparent);
+            _penLineBuffer.Clear();
         }
 
         private void PenRender() {

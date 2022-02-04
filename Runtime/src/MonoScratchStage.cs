@@ -14,6 +14,7 @@ namespace MonoScratch.Runtime {
         public override int RenderY => 0;
         public override int RenderRotation => 90;
         public override float RenderScale => 1;
+        public override bool RenderVisible => true;
 
     }
 }

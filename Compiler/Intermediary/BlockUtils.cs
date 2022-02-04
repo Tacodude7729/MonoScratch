@@ -14,7 +14,7 @@ namespace MonoScratch.Compiler {
 
         public static string StringToNumString(string value) {
             if (double.TryParse(value, out double result)) {
-                if (result.ToString() == value) return value;
+                if (result.ToString() == value) return value + "d";
             }
             return SourceGenerator.StringValue(value);
         }

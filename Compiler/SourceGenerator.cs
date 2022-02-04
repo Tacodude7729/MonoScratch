@@ -17,6 +17,7 @@ namespace MonoScratch.Compiler {
             AppendLine("using MonoScratch.Runtime;");
             AppendLine("using System;");
             AppendLine("using System.Collections.Generic;");
+            AppendLine("using Microsoft.Xna.Framework;");
             AppendLine();
         }
 

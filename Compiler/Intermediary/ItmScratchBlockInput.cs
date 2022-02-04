@@ -52,7 +52,7 @@ namespace MonoScratch.Compiler {
                 case BlockReturnType.STRING:
                     return SourceGenerator.StringValue(Value);
                 case BlockReturnType.NUMBER:
-                    return BlockUtils.StringToNum(Value).ToString();
+                    return BlockUtils.StringToNum(Value).ToString() + "d";
                 case BlockReturnType.ANY:
                     return BlockUtils.StringToNumString(Value);
                 case BlockReturnType.VALUE:

@@ -56,6 +56,13 @@ namespace MonoScratch.Compiler {
             AddBlock("argument_reporter_string_number", ProcedureBlocks.ArgumentReporterStringNumber.Create);
             AddBlock("argument_reporter_boolean", ProcedureBlocks.ArgumentReporterBoolean.Create);
 
+            AddBlock("pen_clear", PenBlocks.ClearBlock.Create);
+            AddBlock("pen_penDown", PenBlocks.CreatePenDownBlock);
+            AddBlock("pen_penUp", PenBlocks.CreatePenUpBlock);
+            AddBlock("pen_setPenColorToColor", PenBlocks.SetPenColorBlock.Create);
+            AddBlock("pen_changePenSizeBy", PenBlocks.CreateChangePenSizeByBlock);
+            AddBlock("pen_setPenSizeTo", PenBlocks.CreateSetPenSizeBlock);
+
         }
 
         public static void AddBlock(string opcode, BlockType type) {
