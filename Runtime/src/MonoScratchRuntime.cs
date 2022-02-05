@@ -2,6 +2,7 @@
 using MonoScratch.Project;
 using System.Collections.Generic;
 using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 namespace MonoScratch.Runtime {
@@ -20,7 +21,11 @@ namespace MonoScratch.Runtime {
         private readonly List<MonoScratchThread> _threads;
         private readonly Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread> _threadFuncMap;
 
+        public Stopwatch TimerStopwatch;
+        public double Timer => TimerStopwatch.ElapsedMilliseconds / 1000d + 0.000001d;
+
         public bool RedrawRequested;
+        private bool _started;
 
         public MonoScratchRuntime() {
             DefaultSprites = Interface.GetSprites();
@@ -46,6 +51,8 @@ namespace MonoScratch.Runtime {
 
             IsFixedTimeStep = true;
             TargetElapsedTime = TimeSpan.FromSeconds(1d / Settings.FPS);
+
+            TimerStopwatch = new Stopwatch();
         }
 
         protected override void Initialize() {
@@ -53,9 +60,10 @@ namespace MonoScratch.Runtime {
             foreach (IMonoScratchSprite sprite in DefaultSprites)
                 sprite.Assets.Load();
 
-            base.Initialize();
-
             OnGreenFlag();
+            TimerStopwatch.Start();
+
+            base.Initialize();
         }
 
         public MonoScratchThread StartThread(MonoScratchThread.ScratchFunction function, bool restartExisting) {
@@ -84,6 +92,7 @@ namespace MonoScratch.Runtime {
                 && numActiveThreads != 0
                 && (!RedrawRequested || Settings.TurboMode)
             ) {
+                _started = true;
                 numActiveThreads = 0;
                 bool removedThread = false;
 
@@ -117,6 +126,10 @@ namespace MonoScratch.Runtime {
                         }
                         return false;
                     });
+            }
+
+            if (_started && _threads.Count == 0 && Settings.CloseWhenDone) {
+                Exit();
             }
         }
 

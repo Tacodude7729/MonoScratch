@@ -43,7 +43,7 @@ namespace MonoScratch.Runtime {
             CostumeShader = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/Sprite.mgfx"));
             CostumeShaderBrightnessEffect = CostumeShader.Parameters["BrightnessEffect"] ?? throw new SystemException("Missing parameter on shader!");
 
-            PenCanvas = new RenderTarget2D(GraphicsDevice, Width, Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            PenCanvas = new RenderTarget2D(GraphicsDevice, Width, Height, false, SurfaceFormat.Color, DepthFormat.None, 4, RenderTargetUsage.PreserveContents);
             _penLineEffect = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/PenLine.mgfx"));
             _penLineEffectCanvasSize = _penLineEffect.Parameters["CanvasSize"] ?? throw new SystemException("Missing parameter on shader!");
             _penLineBuffer = new List<PenStrokeVertex>();
@@ -139,7 +139,7 @@ namespace MonoScratch.Runtime {
 
             Vector2 linePoint = new Vector2((float)x0, (float)y0);
             Vector2 linePointDiff = new Vector2(lineDiffX, lineDiffY);
-            Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness);
+            Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness + 1);
             float lineColorAlpha = color.A / 255f;
             Vector4 lineColor = new Vector4(lineColorAlpha * color.R / 255f, lineColorAlpha * color.G / 255f, lineColorAlpha * color.B / 255f, lineColorAlpha);
 
@@ -150,6 +150,8 @@ namespace MonoScratch.Runtime {
             _penLineBuffer.Add(new PenStrokeVertex(new Vector2(1f, 1f), linePoint, linePointDiff, lineColor, lineLengthThickness));
             _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
             _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 1f), linePoint, linePointDiff, lineColor, lineLengthThickness));
+
+            Runtime.RedrawRequested = true;
         }
 
         public void PenClear() {

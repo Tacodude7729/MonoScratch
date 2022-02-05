@@ -48,7 +48,8 @@ namespace MonoScratch.Compiler {
                     StringBuilder line = new StringBuilder();
 
                     string yr = ctx.GetNextSymbol("yr");
-                    line.Append($"foreach (YieldReason {yr} in ");
+                    if (procedure.YieldsThread)
+                        line.Append($"foreach (YieldReason {yr} in ");
 
                     line.Append(procedure.MethodName);
                     line.Append("(");
@@ -77,14 +78,20 @@ namespace MonoScratch.Compiler {
                             line.Append(", ");
                         }
                     }
-                    line.Append("))");
+                    line.Append(")");
 
-                    ctx.Source.AppendLine(line.ToString());
-                    ctx.Source.PushBlock();
-                    if (ctx.ScreenRefresh) ctx.Source.AppendLine($"yield return {yr};");
-                    else ctx.Source.AppendLine($"if ({yr} != YieldReason.YIELD) yield return {yr};");
+                    if (procedure.YieldsThread) {
+                        line.Append(")");
+                        ctx.Source.AppendLine(line.ToString());
+                        ctx.Source.PushBlock();
+                        if (ctx.ScreenRefresh) ctx.Source.AppendLine($"yield return {yr};");
+                        else ctx.Source.AppendLine($"if ({yr} != YieldReason.YIELD) yield return {yr};");
+                        ctx.Source.PopBlock();
+                    } else {
+                        line.Append(";");
+                        ctx.Source.AppendLine(line.ToString());
+                    }
 
-                    ctx.Source.PopBlock();
                 } else {
                     switch (Proccode) {
                         case "\u200B\u200Blog\u200B\u200B %s":
@@ -116,6 +123,8 @@ namespace MonoScratch.Compiler {
             public readonly string MethodName;
 
             public readonly bool ScreenRefresh;
+
+            public bool YieldsThread => ScreenRefresh;
 
             public int ArgumentCount => ArgumentIdMap.Count;
 

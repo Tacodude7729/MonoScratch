@@ -1,8 +1,12 @@
 using System.Globalization;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace MonoScratch.Runtime {
     public static class Utils {
+
+        public static Random Rand = new Random();
+
         public static double StringToNumber(string str) {
             if (double.TryParse(str, MonoScratchValue.Styles, null, out double numberValue))
                 return double.IsNaN(numberValue) ? 0 : numberValue;
@@ -41,7 +45,34 @@ namespace MonoScratch.Runtime {
             byte r = (byte)((iValue >> 16) & 0xFF);
             byte g = (byte)((iValue >> 8) & 0xFF);
             byte b = (byte)(iValue & 0xFF);
-            return new Color(r, g, b, a > 0 ? a : (byte) 255);
+            return new Color(r, g, b, a > 0 ? a : (byte)255);
+        }
+
+        public static double Random(double a, double b) { // TODO this don't work for rand(0.0, 1.0)
+            // if ((int)a == a && (int)b == b) {
+            //     if (b > a)
+            //         return Rand.Next((int)a, (int)b);
+            //     else
+            //         return Rand.Next((int)b, (int)a);
+            // }
+            if (b > a)
+                return a + Rand.NextDouble() * (b - a);
+            else
+                return b + Rand.NextDouble() * (a - b);
+        }
+
+        public static double Tan(double angle) {
+            angle = angle % 360;
+            switch (angle) {
+                case -270:
+                case 90:
+                    return double.PositiveInfinity;
+                case -90:
+                case 270:
+                    return double.NegativeInfinity;
+                default:
+                    return Math.Tan((Math.PI * angle) / 180);
+            }
         }
     }
 }

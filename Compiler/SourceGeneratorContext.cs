@@ -21,6 +21,7 @@ namespace MonoScratch.Compiler {
         public bool ScreenRefresh => CurrentProcedure?.ScreenRefresh ?? true;
         public bool IsInSprite => CurrentTarget is ItmScratchSprite;
         public bool IsInStage => CurrentTarget is ItmScratchStage;
+        public bool CanYield => CurrentProcedure?.YieldsThread ?? true;
 
         public readonly ItmScratchStage Stage;
         public readonly Dictionary<string, ItmScratchSprite> Sprites;

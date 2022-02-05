@@ -131,7 +131,12 @@ namespace MonoScratch.Compiler {
 
             // Custom Blocks
             foreach (ProcedureBlocks.DefinitionBlock procedure in Procedures.Values) {
-                StringBuilder line = new StringBuilder($"public IEnumerable<YieldReason> {procedure.MethodName}(");
+                StringBuilder line = new StringBuilder();
+                if (procedure.YieldsThread) {
+                    line.Append($"public IEnumerable<YieldReason> {procedure.MethodName}(");
+                } else {
+                    line.Append($"public void {procedure.MethodName}(");
+                }
                 int i = 0;
                 foreach (ProcedureBlocks.ProcedureArgument argument in procedure.ArgumentIdMap.Values) {
                     if (argument.ArgType == ProcedureBlocks.ProcedureArgumentType.VALUE) {
@@ -153,7 +158,8 @@ namespace MonoScratch.Compiler {
                 if (procedure.Block.NextID != null)
                     ctx.AppendBlocks(procedure.Block.NextID);
                 ctx.CurrentProcedure = null;
-                ctx.Source.AppendLine("yield break;");
+                if (procedure.YieldsThread)
+                    ctx.Source.AppendLine("yield break;");
                 ctx.Source.PopBlock();
                 ctx.Source.AppendLine();
             }

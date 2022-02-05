@@ -16,7 +16,7 @@ namespace MonoScratch.Compiler {
             ID = variable.ID;
             Name = variable.Name;
             Value = variable.Value;
-            CodeName = ctx.GetNextSymbol(Name);
+            CodeName = ctx.GetNextSymbol("Var " + Name);
         }
 
         public string GetCode(SourceGeneratorContext ctx) {

@@ -44,6 +44,7 @@ namespace MonoScratch.Compiler {
             StringBuilder settings = new StringBuilder("return new ProjectSettings(");
 
             settings.Append("false, "); // TurboMode
+            settings.Append("true, "); // CloseWhenDone
             settings.Append("30"); // FPS
 
             settings.Append(");");

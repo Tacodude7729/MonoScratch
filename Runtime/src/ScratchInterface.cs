@@ -4,7 +4,7 @@ using System;
 
 namespace MonoScratch.Project {
 
-    public record ProjectSettings(bool TurboMode, int FPS);
+    public record ProjectSettings(bool TurboMode, bool CloseWhenDone, int FPS);
 
     public static partial class Interface {
 

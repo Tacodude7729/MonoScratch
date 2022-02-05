@@ -1,3 +1,4 @@
+using System;
 using ScratchSharp.Project;
 
 namespace MonoScratch.Compiler {
@@ -121,24 +122,70 @@ namespace MonoScratch.Compiler {
         public static ItmScratchBlock CreateModBlock(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
             new TwoNumberFunctionOperatorBlock(scratchBlock, "Utils.Mod");
 
-
-        public class RoundBlock : ItmScratchBlock {
+        public abstract class OneNumberOperatorBlock : ItmScratchBlock {
             public ItmScratchBlockInput Num;
 
-            public RoundBlock(ScratchBlock block) : base(block) {
+            public OneNumberOperatorBlock(ScratchBlock block) : base(block) {
                 Num = ItmScratchBlockInput.From(block.Inputs["NUM"]);
             }
+
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) =>
+                BlockReturnType.NUMBER;
+        }
+
+
+        public class RoundBlock : OneNumberOperatorBlock {
+            public RoundBlock(ScratchBlock block) : base(block) { }
 
             public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
                 return $"Math.Round({Num.GetCode(ctx, BlockReturnType.NUMBER)})";
             }
 
-            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) => BlockReturnType.NUMBER;
-
             public static RoundBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
                 new RoundBlock(scratchBlock);
         }
 
+        public class MathOperationBlock : OneNumberOperatorBlock {
+            public readonly string Operation;
+
+            public MathOperationBlock(ScratchBlock block) : base(block) {
+                Operation = block.Fields["OPERATOR"].Name.ToLower();
+            }
+
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                string n = Num.GetCode(ctx, BlockReturnType.NUMBER);
+                switch (Operation) {
+                    case "abs": return $"Math.Abs({n})";
+                    case "floor": return $"Math.Floor({n})";
+                    case "ceiling": return $"Math.Ceiling({n})";
+                    case "sqrt": return $"Math.Sqrt({n})";
+                    case "tan": return $"Utils.Tan({n})";
+                }
+                throw new SystemException($"Operation not implimented '{Operation}'.");
+            }
+
+            public static MathOperationBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+                new MathOperationBlock(scratchBlock);
+        }
+
+        public class RandomBlock : ItmScratchBlock {
+            public ItmScratchBlockInput From, To;
+
+            public RandomBlock(ScratchBlock block) : base(block) {
+                From = ItmScratchBlockInput.From(block.Inputs["FROM"]);
+                To = ItmScratchBlockInput.From(block.Inputs["TO"]);
+            }
+
+            public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) {
+                return $"Utils.Random({To.GetCode(ctx, BlockReturnType.NUMBER)}, {From.GetCode(ctx, BlockReturnType.NUMBER)})";
+            }
+
+            public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) =>
+                BlockReturnType.NUMBER;
+
+            public static RandomBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+                new RandomBlock(scratchBlock);
+        }
 
     }
 }

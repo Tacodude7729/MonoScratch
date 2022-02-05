@@ -16,6 +16,7 @@ namespace MonoScratch.Runtime {
 
         public string? _stringValue = null;
         public double _numberValue = 0;
+        private bool _numberCached;
 
         public MonoScratchValue() {
         }
@@ -39,27 +40,36 @@ namespace MonoScratch.Runtime {
         public void Set(MonoScratchValue val) {
             _stringValue = val._stringValue;
             _numberValue = val._numberValue;
+            _numberCached = false;
         }
 
         public void Set(string val) {
             _stringValue = val;
+            _numberCached = false;
         }
 
         public void Set(double val) {
             _stringValue = null;
             _numberValue = val;
+            _numberCached = false;
         }
 
         public void Set(bool val) {
             _stringValue = val ? "true" : "false";
+            _numberCached = false;
         }
 
         // Changes to this should be synced with BlockUtils in Compiler
         public double AsNumber() {
             if (_stringValue != null) {
-                if (double.TryParse(_stringValue, Styles, null, out double numberValue))
-                    return double.IsNaN(numberValue) ? 0 : numberValue;
-                return 0;
+                if (_numberCached)
+                    return _numberValue;
+
+                if (double.TryParse(_stringValue, Styles, null, out _numberValue))
+                    _numberValue = double.IsNaN(_numberValue) ? 0 : _numberValue;
+                else _numberValue = 0;
+                _numberCached = true;
+                return _numberValue;
             }
             return double.IsNaN(_numberValue) ? 0 : _numberValue;
         }

@@ -53,7 +53,7 @@ namespace MonoScratch.Compiler {
         public virtual bool RestartExistingThreads => false;
 
         public ItmScratchSimpleHatBlock(SourceGeneratorContext ctx, ScratchBlock block, string method) : base(ctx, block, method + "Listener") {
-            RunnerMethodName = ctx.GetNextSymbol("On " + method);
+            RunnerMethodName = "On" + method;
         }
 
         public override void AppendRunnerMethod(SourceGeneratorContext ctx, List<ItmScratchHatBlock> hats) {
@@ -66,6 +66,17 @@ namespace MonoScratch.Compiler {
 
             ctx.Source.PopBlock();
         }
+    }
+
+    public class DummyBlock : ItmScratchBlock {
+        public DummyBlock(ScratchBlock block) : base(block) { }
+        public override void AppendExecute(SourceGeneratorContext ctx) { }
+        public override string GetValueCode(SourceGeneratorContext ctx, BlockReturnType requestedType) => "0";
+        public override BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType) =>
+            BlockReturnType.NUMBER;
+
+        public static DummyBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+            new DummyBlock(scratchBlock);
     }
 
 }
