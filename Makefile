@@ -5,6 +5,7 @@ include .env
 export
 
 run:
+	cd Build && dotnet build -c Release
 	cd Build && bin/Release/net6.0/Project
 
 build:
@@ -14,7 +15,6 @@ build:
 	cp -r Runtime/src Build/MonoScratch
 	cp -r Runtime/shaders/bin Build/Shaders
 	cp Runtime/Runtime.csproj Build/Project.csproj
-	cd Build && dotnet build -c Release
 
 shaders:
 	rm -rf Runtime/shaders/bin

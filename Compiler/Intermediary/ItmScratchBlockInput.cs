@@ -154,7 +154,7 @@ namespace MonoScratch.Compiler {
                     throw new SystemException("Cannot convert from variable to boolean.");
                 case BlockReturnType.VALUE:
                 case BlockReturnType.ANY:
-                    return GetVariable(ctx).GetCode(ctx);
+                    return $"new MonoScratchValue({GetVariable(ctx).GetCode(ctx)})";
             }
             throw new SystemException("");
         }

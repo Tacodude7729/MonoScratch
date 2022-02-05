@@ -49,7 +49,7 @@ namespace MonoScratch.Compiler {
             ID = variable.ID;
             Name = variable.Name;
             Values = variable.Values;
-            CodeName = ctx.GetNextSymbol(Name);
+            CodeName = ctx.GetNextSymbol("List " + Name);
         }
 
         public string GetCode(SourceGeneratorContext ctx) {

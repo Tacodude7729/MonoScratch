@@ -137,9 +137,10 @@ namespace MonoScratch.Runtime {
             float lineDiffY = (float)(y0 - y1);
             float lineLength = MathF.Sqrt((lineDiffX * lineDiffX) + (lineDiffY * lineDiffY));
 
-            Vector2 linePoint = new Vector2((float)x0, (float)y0);
+            float offset = (lineThickness == 1 || lineThickness == 3) ? 0.5f : 0;
+            Vector2 linePoint = new Vector2((float)x0 + offset, (float)y0 + offset);
             Vector2 linePointDiff = new Vector2(lineDiffX, lineDiffY);
-            Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness + 1);
+            Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness);
             float lineColorAlpha = color.A / 255f;
             Vector4 lineColor = new Vector4(lineColorAlpha * color.R / 255f, lineColorAlpha * color.G / 255f, lineColorAlpha * color.B / 255f, lineColorAlpha);
 

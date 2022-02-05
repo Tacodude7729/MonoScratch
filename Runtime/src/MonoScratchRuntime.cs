@@ -22,7 +22,7 @@ namespace MonoScratch.Runtime {
         private readonly Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread> _threadFuncMap;
 
         public Stopwatch TimerStopwatch;
-        public double Timer => TimerStopwatch.ElapsedMilliseconds / 1000d + 0.000001d;
+        public double Timer => TimerStopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
 
         public bool RedrawRequested;
         private bool _started;
@@ -139,6 +139,10 @@ namespace MonoScratch.Runtime {
         }
 
         protected override void Draw(GameTime gameTime) {
+            Graphics.PreferredBackBufferWidth = Renderer.Width * Renderer.PixelScale;
+            Graphics.PreferredBackBufferHeight = Renderer.Height * Renderer.PixelScale;
+            Graphics.ApplyChanges();
+
             Renderer.Render();
             RedrawRequested = false;
             base.Draw(gameTime);

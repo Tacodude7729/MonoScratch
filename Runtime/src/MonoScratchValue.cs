@@ -40,7 +40,7 @@ namespace MonoScratch.Runtime {
         public void Set(MonoScratchValue val) {
             _stringValue = val._stringValue;
             _numberValue = val._numberValue;
-            _numberCached = false;
+            _numberCached = val._numberCached;
         }
 
         public void Set(string val) {

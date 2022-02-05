@@ -60,9 +60,7 @@ namespace MonoScratch.Compiler {
                             input = Inputs[argument.ID];
 
                             if (argument.ArgType == ProcedureArgumentType.VALUE) {
-                                line.Append("new MonoScratchValue(");
                                 line.Append(input.GetCode(ctx, BlockReturnType.ANY));
-                                line.Append(")");
                             } else {
                                 line.Append(input.GetCode(ctx, BlockReturnType.BOOLEAN));
                             }
