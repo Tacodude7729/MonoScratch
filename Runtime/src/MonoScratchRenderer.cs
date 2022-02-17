@@ -43,10 +43,11 @@ namespace MonoScratch.Runtime {
             CostumeShader = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/Sprite.mgfx"));
             CostumeShaderBrightnessEffect = CostumeShader.Parameters["BrightnessEffect"] ?? throw new SystemException("Missing parameter on shader!");
 
-            PenCanvas = new RenderTarget2D(GraphicsDevice, Width, Height, false, SurfaceFormat.Color, DepthFormat.None, 4, RenderTargetUsage.PreserveContents);
+            PenCanvas = new RenderTarget2D(GraphicsDevice, Width, Height, false, SurfaceFormat.Color, DepthFormat.None, 8, RenderTargetUsage.PreserveContents);
             _penLineEffect = new Effect(GraphicsDevice, File.ReadAllBytes("Shaders/PenLine.mgfx"));
             _penLineEffectCanvasSize = _penLineEffect.Parameters["CanvasSize"] ?? throw new SystemException("Missing parameter on shader!");
-            _penLineBuffer = new List<PenStrokeVertex>();
+            _penLineBuffer = new PenLineBuffer();
+            _penSpriteBatch = new SpriteBatch(GraphicsDevice);
 
             _aspectRatio = ((float)Height) / Width;
 
@@ -64,7 +65,7 @@ namespace MonoScratch.Runtime {
             CostumeSpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
             CostumeShader.CurrentTechnique.Passes[0].Apply();
             foreach (IMonoScratchTarget target in Runtime.Targets.Backward()) {
-                RenderTarget(target);
+                RenderTarget(target, CostumeSpriteBatch, PixelScale);
 
                 if (target is IMonoScratchStage)
                     CostumeSpriteBatch.Draw(PenCanvas, new Rectangle(0, 0, Width * PixelScale, Height * PixelScale), null, Color.White);
@@ -78,17 +79,17 @@ namespace MonoScratch.Runtime {
             CanvasSpriteBatch.End();
         }
 
-        private void RenderTarget(IMonoScratchTarget target) {
+        private void RenderTarget(IMonoScratchTarget target, SpriteBatch sb, int pixelScale) {
             if (target.RenderVisible) {
                 MonoScratchCostume costume = target.CurrentCostume;
                 int x = target.RenderX;
                 int y = target.RenderY;
                 int rotation = target.RenderRotation;
 
-                float scale = PixelScale * target.RenderScale / costume.BitmapResolution;
+                float scale = pixelScale * target.RenderScale / costume.BitmapResolution;
 
-                CostumeSpriteBatch.Draw(costume.Texture,
-                    new Vector2(PixelScale * (x + Width / 2f), PixelScale * (Height / 2f - y)),
+                sb.Draw(costume.Texture,
+                    new Vector2(pixelScale * (x + Width / 2f), pixelScale * (Height / 2f - y)),
                     null, Color.White,
                     (float)(Math.PI * (rotation - 90) / 180), costume.RotationCenter,
                     new Vector2(scale),
@@ -104,32 +105,19 @@ namespace MonoScratch.Runtime {
 
         private Effect _penLineEffect;
         private EffectParameter _penLineEffectCanvasSize;
+        private SpriteBatch _penSpriteBatch;
 
-        private List<PenStrokeVertex> _penLineBuffer;
+        private PenLineBuffer _penLineBuffer;
+        private bool _penTargetBound, _penSpriteBatchStarted;
 
-        private struct PenStrokeVertex : IVertexType {
-            public readonly Vector2 Position;
-            public readonly Vector2 LinePoint;
-            public readonly Vector2 LinePointDiff;
-            public readonly Vector4 LineColor;
-            public readonly Vector2 LineLengthThickness;
-
-            public PenStrokeVertex(Vector2 position, Vector2 linePoint, Vector2 linePointDiff, Vector4 lineColor, Vector2 lineLengthThickness) {
-                Position = position;
-                LinePoint = linePoint;
-                LinePointDiff = linePointDiff;
-                LineColor = lineColor;
-                LineLengthThickness = lineLengthThickness;
+        public void PenStamp(IMonoScratchSprite sprite) {
+            PenRender();
+            PenEnsureTarget();
+            if (!_penSpriteBatchStarted) {
+                _penSpriteBatch.Begin();
+                _penSpriteBatchStarted = true;
             }
-
-            private static readonly VertexDeclaration _vertexDeclaration = new VertexDeclaration(
-                new VertexElement(sizeof(float) * 0, VertexElementFormat.Vector2, VertexElementUsage.Position, 0), // Position
-                new VertexElement(sizeof(float) * 2, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0), // LinePoint
-                new VertexElement(sizeof(float) * 4, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1), // LinePointDiff
-                new VertexElement(sizeof(float) * 6, VertexElementFormat.Vector4, VertexElementUsage.Color, 0), // LineColor
-                new VertexElement(sizeof(float) * 10, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 2) // LineLengthThickness
-            );
-            public VertexDeclaration VertexDeclaration => _vertexDeclaration;
+            RenderTarget(sprite, _penSpriteBatch, 1);
         }
 
         public void PenDrawLine(double x0, double y0, double x1, double y1, double lineThickness, Color color) {
@@ -143,33 +131,35 @@ namespace MonoScratch.Runtime {
             Vector2 lineLengthThickness = new Vector2(lineLength, (float)lineThickness);
             float lineColorAlpha = color.A / 255f;
             Vector4 lineColor = new Vector4(lineColorAlpha * color.R / 255f, lineColorAlpha * color.G / 255f, lineColorAlpha * color.B / 255f, lineColorAlpha);
-
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(1f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(1f, 1f), linePoint, linePointDiff, lineColor, lineLengthThickness));
-
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(1f, 1f), linePoint, linePointDiff, lineColor, lineLengthThickness));
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 0f), linePoint, linePointDiff, lineColor, lineLengthThickness));
-            _penLineBuffer.Add(new PenStrokeVertex(new Vector2(0f, 1f), linePoint, linePointDiff, lineColor, lineLengthThickness));
+            _penLineBuffer.AddLine(linePoint, linePointDiff, lineColor, lineLengthThickness);
 
             Runtime.RedrawRequested = true;
         }
 
+        private void PenEnsureTarget() {
+            if (!_penTargetBound)
+                GraphicsDevice.SetRenderTarget(PenCanvas);
+        }
+
         public void PenClear() {
-            GraphicsDevice.SetRenderTarget(PenCanvas);
+            PenEnsureTarget();
             GraphicsDevice.Clear(Color.Transparent);
             _penLineBuffer.Clear();
         }
 
         private void PenRender() {
-            if (_penLineBuffer.Count != 0) {
-                GraphicsDevice.SetRenderTarget(PenCanvas);
+            if (_penSpriteBatchStarted) {
+                _penSpriteBatch.End();
+                _penSpriteBatchStarted = false;
+            }
+            if (!_penLineBuffer.IsEmpty) {
+                PenEnsureTarget();
 
                 GraphicsDevice.BlendState = BlendState.AlphaBlend;
                 GraphicsDevice.DepthStencilState = DepthStencilState.None;
 
                 _penLineEffect.CurrentTechnique.Passes[0].Apply();
-                GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _penLineBuffer.ToArray(), 0, _penLineBuffer.Count / 3);
+                GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _penLineBuffer.Vertices, 0, _penLineBuffer.TriangleCount);
 
                 _penLineBuffer.Clear();
             }

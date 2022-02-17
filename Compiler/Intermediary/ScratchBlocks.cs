@@ -74,6 +74,7 @@ namespace MonoScratch.Compiler {
             AddBlock("procedures_prototype", DummyBlock.Create); // This block is handled in ProcedureBlocks.DefinitionBlock.Create
 
             AddBlock("pen_clear", PenBlocks.ClearBlock.Create);
+            AddBlock("pen_stamp", PenBlocks.StampBlock.Create);
             AddBlock("pen_penDown", PenBlocks.CreatePenDownBlock);
             AddBlock("pen_penUp", PenBlocks.CreatePenUpBlock);
             AddBlock("pen_setPenColorToColor", PenBlocks.SetPenColorBlock.Create);

@@ -80,7 +80,7 @@ namespace MonoScratch.Runtime {
                     Program.Runtime.Renderer.PenDrawLine(_x, _y, _x, _y, _penSize, PenColor);
                     _penDown = true;
                 } else { // Pen Up
-                    _penDown = true;
+                    _penDown = false;
                 }
             }
         }

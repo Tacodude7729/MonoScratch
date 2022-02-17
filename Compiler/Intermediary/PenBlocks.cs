@@ -15,6 +15,18 @@ namespace MonoScratch.Compiler {
                 new ClearBlock(scratchBlock);
         }
 
+        public class StampBlock : ItmScratchBlock {
+            public StampBlock(ScratchBlock block) : base(block) { }
+
+            public override void AppendExecute(SourceGeneratorContext ctx) {
+                if (ctx.IsInSprite)
+                    ctx.Source.AppendLine("Program.Runtime.Renderer.PenStamp(this);");
+            }
+
+            public static StampBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
+                new StampBlock(scratchBlock);
+        }
+
         public class PenUpDownBlock : ItmScratchBlock {
             public readonly bool PenDown;
 

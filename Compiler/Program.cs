@@ -10,7 +10,7 @@ namespace MonoScratch.Compiler {
 
         public static void Main() {
 
-            string sb3 = "Goals.sb3";
+            string sb3 = "Pen Benchmark.sb3";
 
             string sb3ExtractPath = Path.Combine(Path.GetTempPath(), "monoscratch" + new Random().Next());
 

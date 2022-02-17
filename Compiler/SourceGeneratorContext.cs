@@ -153,7 +153,7 @@ namespace MonoScratch.Compiler {
 
                 // Prevent keyword names
                 if (!_codeProvider.IsValidIdentifier(name)) {
-                    return "@" + name;
+                    return "_" + name;
                 }
 
                 return name;
