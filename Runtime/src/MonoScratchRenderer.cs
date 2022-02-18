@@ -137,8 +137,10 @@ namespace MonoScratch.Runtime {
         }
 
         private void PenEnsureTarget() {
-            if (!_penTargetBound)
+            if (!_penTargetBound) {
+                _penTargetBound = true;
                 GraphicsDevice.SetRenderTarget(PenCanvas);
+            }
         }
 
         public void PenClear() {
@@ -163,6 +165,8 @@ namespace MonoScratch.Runtime {
 
                 _penLineBuffer.Clear();
             }
+            
+            _penTargetBound = false;
         }
 
     }

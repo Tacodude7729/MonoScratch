@@ -14,6 +14,3 @@ public static partial class Interface {
     public static partial IMonoScratchStage GetStage() => throw new SystemException();
     public static partial ProjectSettings GetSettings() => throw new SystemException();
 }
-
-public partial interface ProjectEvents {
-}

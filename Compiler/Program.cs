@@ -25,9 +25,23 @@ namespace MonoScratch.Compiler {
                 SourceGeneratorContext sourceCtx = new SourceGeneratorContext(project);
 
                 sourceCtx.GenerateSources();
-                File.WriteAllText("../Build/Project.cs", sourceCtx.Source.ToString());        
+                File.WriteAllText("../Build/Project.cs", sourceCtx.Source.ToString());
 
                 sourceCtx.GenerateAssets(sb3ExtractPath, "../Build");
+
+                File.WriteAllText("../Build/Project.csproj", 
+@"<Project Sdk='Microsoft.NET.Sdk'>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include='MonoGame.Framework.DesktopGL' Version='3.8.0.1641' />
+  </ItemGroup>
+</Project>
+");
             } finally {
                 Directory.Delete(sb3ExtractPath, true);
             }

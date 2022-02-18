@@ -10,11 +10,11 @@ run:
 
 build:
 	rm -rf Build
-	mkdir Build
+	mkdir Build Build/MonoScratch
 	cd Compiler && dotnet run
-	cp -r Runtime/src Build/MonoScratch
-	cp -r Runtime/shaders/bin Build/Shaders
-	cp Runtime/Runtime.csproj Build/Project.csproj
+	cp -r Runtime/src Build/MonoScratch/Runtime
+	cp -r Share/src Build/MonoScratch/Share
+	cp -r Shaders/bin Build/Shaders
 
 shaders:
 	rm -rf Runtime/shaders/bin

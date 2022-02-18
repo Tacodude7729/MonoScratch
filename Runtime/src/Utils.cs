@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Xna.Framework;
 using System;
+using MonoScratch.Share;
 
 namespace MonoScratch.Runtime {
     public static class Utils {
@@ -8,7 +9,7 @@ namespace MonoScratch.Runtime {
         public static Random Rand = new Random();
 
         public static double StringToNumber(string str) {
-            if (double.TryParse(str, MonoScratchValue.Styles, null, out double numberValue))
+            if (MonoScratchShare.TryParseNum(str, out double numberValue))
                 return double.IsNaN(numberValue) ? 0 : numberValue;
             return 0;
         }

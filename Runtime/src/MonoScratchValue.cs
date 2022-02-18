@@ -1,18 +1,9 @@
-using System.Globalization;
+using MonoScratch.Share;
 
 namespace MonoScratch.Runtime {
     public class MonoScratchValue {
 
         public static MonoScratchValue ZERO = new MonoScratchValue(0);
-
-        // Changes to this should be synced with BlockUtils in Compiler
-        public const NumberStyles Styles =
-            NumberStyles.AllowDecimalPoint |
-            NumberStyles.AllowExponent |
-            NumberStyles.AllowLeadingSign |
-            NumberStyles.AllowLeadingWhite |
-            NumberStyles.AllowTrailingWhite |
-            NumberStyles.AllowTrailingSign;
 
         public string? _stringValue = null;
         public double _numberValue = 0;
@@ -43,7 +34,7 @@ namespace MonoScratch.Runtime {
 
         public void Set(string val) {
             _stringValue = val;
-            if (double.TryParse(_stringValue, Styles, null, out _numberValue))
+            if (MonoScratchShare.TryParseNum(_stringValue, out _numberValue))
                 _numberValue = double.IsNaN(_numberValue) ? 0 : _numberValue;
             else _numberValue = 0;
         }
@@ -57,8 +48,6 @@ namespace MonoScratch.Runtime {
             _stringValue = val ? "true" : "false";
             _numberValue = double.NaN;
         }
-
-        // Changes to this should be synced with BlockUtils in Compiler
         public double AsNumber() {
             return _numberValue;
         }
@@ -99,11 +88,11 @@ namespace MonoScratch.Runtime {
 
         public static int Compare(string v1, string v2) {
             double n1;
-            if (!double.TryParse(v1, Styles, null, out n1))
+            if (!MonoScratchShare.TryParseNum(v1, out n1))
                 n1 = double.NaN;
 
             double n2;
-            if (!double.TryParse(v2, Styles, null, out n2))
+            if (!MonoScratchShare.TryParseNum(v2, out n2))
                 n2 = double.NaN;
 
             if (double.IsNaN(n1) || double.IsNaN(n2))
@@ -117,7 +106,7 @@ namespace MonoScratch.Runtime {
         public static int Compare(MonoScratchValue v1, double n2) {
             double n1;
             if (v1._stringValue != null) {
-                if (!double.TryParse(v1._stringValue, Styles, null, out n1))
+                if (!MonoScratchShare.TryParseNum(v1._stringValue, out n1))
                     n1 = double.NaN;
             } else n1 = v1._numberValue;
             if (double.IsNaN(n1) || double.IsNaN(n2))
@@ -128,7 +117,7 @@ namespace MonoScratch.Runtime {
         public static int Compare(double n1, MonoScratchValue v2) {
             double n2;
             if (v2._stringValue != null) {
-                if (!double.TryParse(v2._stringValue, Styles, null, out n2))
+                if (!MonoScratchShare.TryParseNum(v2._stringValue, out n2))
                     n2 = double.NaN;
             } else n2 = v2._numberValue;
             if (double.IsNaN(n1) || double.IsNaN(n2))
@@ -139,12 +128,12 @@ namespace MonoScratch.Runtime {
         public static int Compare(MonoScratchValue v1, MonoScratchValue v2) {
             double n1;
             if (v1._stringValue != null) {
-                if (!double.TryParse(v1._stringValue, Styles, null, out n1))
+                if (!MonoScratchShare.TryParseNum(v1._stringValue, out n1))
                     n1 = double.NaN;
             } else n1 = v1._numberValue;
             double n2;
             if (v2._stringValue != null) {
-                if (!double.TryParse(v2._stringValue, Styles, null, out n2))
+                if (!MonoScratchShare.TryParseNum(v2._stringValue, out n2))
                     n2 = double.NaN;
             } else n2 = v2._numberValue;
             if (double.IsNaN(n1) || double.IsNaN(n2))

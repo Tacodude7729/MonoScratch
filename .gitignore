@@ -1,6 +1,5 @@
 Build
 bin
 obj
-.vscode
 
-!Runtime/shaders/bin
+!Shaders/bin

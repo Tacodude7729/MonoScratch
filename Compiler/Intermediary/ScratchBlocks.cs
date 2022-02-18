@@ -5,12 +5,12 @@ namespace MonoScratch.Compiler {
 
     public static class ScratchBlocks {
 
-        public delegate ItmScratchBlock BlockType(SourceGeneratorContext ctx, ScratchBlock scratchBlock);
+        public delegate ItmScratchBlock BlockFactory(SourceGeneratorContext ctx, ScratchBlock scratchBlock);
 
-        private static Dictionary<string, BlockType> _blocks;
+        private static Dictionary<string, BlockFactory> _blocks;
 
         static ScratchBlocks() {
-            _blocks = new Dictionary<string, BlockType>();
+            _blocks = new Dictionary<string, BlockFactory>();
 
             AddBlock("motion_gotoxy", MotionBlocks.GotoXYBlock.Create);
             AddBlock("motion_changexby", MotionBlocks.ChangeXByBlock.Create);
@@ -83,12 +83,12 @@ namespace MonoScratch.Compiler {
 
         }
 
-        public static void AddBlock(string opcode, BlockType type) {
+        public static void AddBlock(string opcode, BlockFactory type) {
             _blocks.Add(opcode, type);
         }
 
         public static ItmScratchBlock? Create(SourceGeneratorContext ctx, ScratchBlock block) {
-            if (_blocks.TryGetValue(block.Opcode, out BlockType? type))
+            if (_blocks.TryGetValue(block.Opcode, out BlockFactory? type))
                 return type.Invoke(ctx, block);
             return null;
         }
