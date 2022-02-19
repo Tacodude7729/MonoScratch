@@ -119,23 +119,28 @@ namespace MonoScratch.Compiler {
                 ctx.Source.AppendLine();
 
                 foreach (ItmScratchHatBlock hat in hats.Value) {
+                    ctx.CurrentHat = hat;
                     hat.AppendListenerMethodHeader(ctx);
                     ctx.Source.PushBlock();
                     ctx.AppendBlocks(hat.Block.NextID!); // Null checked above
-                    ctx.Source.AppendLine("yield break;");
+                    if (hat.GetYieldType(ctx) != BlockYieldType.NONE)
+                        ctx.Source.AppendLine("yield break;");
                     ctx.Source.PopBlock();
                     ctx.Source.AppendLine();
                 }
             }
+            ctx.CurrentHat = null;
             ctx.Source.AppendLine();
 
             // Custom Blocks
             foreach (ProcedureBlocks.DefinitionBlock procedure in Procedures.Values) {
                 StringBuilder line = new StringBuilder();
-                if (procedure.YieldsThread) {
-                    line.Append($"public IEnumerable<YieldReason> {procedure.MethodName}(");
-                } else {
+                ctx.CurrentHat = procedure;
+                BlockYieldType yieldType = procedure.GetYieldType(ctx);
+                if (yieldType == BlockYieldType.NONE) {
                     line.Append($"public void {procedure.MethodName}(");
+                } else {
+                    line.Append($"public IEnumerable<YieldReason> {procedure.MethodName}(");
                 }
                 int i = 0;
                 foreach (ProcedureBlocks.ProcedureArgument argument in procedure.ArgumentIdMap.Values) {
@@ -154,15 +159,15 @@ namespace MonoScratch.Compiler {
 
                 ctx.Source.AppendLine(line.ToString());
                 ctx.Source.PushBlock();
-                ctx.CurrentProcedure = procedure;
                 if (procedure.Block.NextID != null)
                     ctx.AppendBlocks(procedure.Block.NextID);
-                ctx.CurrentProcedure = null;
-                if (procedure.YieldsThread)
+                ctx.CurrentHat = null;
+                if (yieldType != BlockYieldType.NONE)
                     ctx.Source.AppendLine("yield break;");
                 ctx.Source.PopBlock();
                 ctx.Source.AppendLine();
             }
+            ctx.CurrentHat = null;
 
             ctx.Source.PopBlock();
             ctx.Source.AppendLine();

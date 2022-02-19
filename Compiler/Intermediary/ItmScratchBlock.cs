@@ -12,14 +12,23 @@ namespace MonoScratch.Compiler {
         ANY // Can be a 'string', 'double', 'bool' or 'MonoScratchValue'
     }
 
+    public enum BlockYieldType {
+        NONE = 0,
+        YIELD = 1,
+        YIELD_TICK = 2 // This is both STATUS_PROMISE_WAIT and STATUS_YIELD_TICK in scratch-vm
+    }
+
     public class ItmScratchBlock {
 
         public readonly string Opcode;
         public readonly ScratchBlock Block;
 
+        private BlockYieldType? YieldType;
+
         public ItmScratchBlock(ScratchBlock block) {
             Opcode = block.Opcode;
             Block = block;
+            YieldType = null;
         }
 
         public virtual void AppendExecute(SourceGeneratorContext ctx)
@@ -30,6 +39,14 @@ namespace MonoScratch.Compiler {
 
         public virtual BlockReturnType GetValueCodeReturnType(SourceGeneratorContext ctx, BlockReturnType requestedType)
             => throw new NotImplementedException($"Can't evaluate block '{Opcode}'.");
+
+        public BlockYieldType GetYieldType(SourceGeneratorContext ctx) {
+            if (YieldType != null) return YieldType.Value;
+            return (YieldType = CalculateYieldType(ctx)).Value;
+        }
+
+        protected virtual BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+            => BlockYieldType.NONE;
     }
 
     public abstract class ItmScratchHatBlock : ItmScratchBlock {
@@ -41,7 +58,14 @@ namespace MonoScratch.Compiler {
         }
 
         public virtual void AppendListenerMethodHeader(SourceGeneratorContext ctx) {
-            ctx.Source.AppendLine($"public IEnumerable<YieldReason> {ListenerMethodName}()");
+            if (GetYieldType(ctx) == BlockYieldType.NONE)
+                ctx.Source.AppendLine($"public void {ListenerMethodName}()");
+            else
+                ctx.Source.AppendLine($"public IEnumerable<YieldReason> {ListenerMethodName}()");
+        }
+
+        protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx) {
+            return ctx.GetHatYieldType(this);
         }
 
         public abstract void AppendRunnerMethod(SourceGeneratorContext ctx, List<ItmScratchHatBlock> hats);

@@ -16,12 +16,12 @@ namespace MonoScratch.Compiler {
         public readonly ScratchProject Project;
 
         public ItmScratchTarget? CurrentTarget;
-        public ProcedureBlocks.DefinitionBlock? CurrentProcedure;
+        public ItmScratchBlock? CurrentHat;
+        public ProcedureBlocks.DefinitionBlock? CurrentProcedure => CurrentHat as ProcedureBlocks.DefinitionBlock;
 
-        public bool ScreenRefresh => CurrentProcedure?.ScreenRefresh ?? true;
+        public bool CanYield => CurrentHat?.GetYieldType(this) != BlockYieldType.NONE;
         public bool IsInSprite => CurrentTarget is ItmScratchSprite;
         public bool IsInStage => CurrentTarget is ItmScratchStage;
-        public bool CanYield => CurrentProcedure?.YieldsThread ?? true;
 
         public readonly ItmScratchStage Stage;
         public readonly Dictionary<string, ItmScratchSprite> Sprites;
@@ -115,7 +115,7 @@ namespace MonoScratch.Compiler {
 
         public ItmScratchBroadcast GetOrCreateBroadcast(BlockInput broadcastInput) {
             return GetOrCreateBroadcast((broadcastInput.Block as BlockInputPrimitiveBroadcast)
-                ?? throw new SystemException("Expected broadcast input, got "+broadcastInput));
+                ?? throw new SystemException("Expected broadcast input, got " + broadcastInput));
         }
 
         public ItmScratchBroadcast GetOrCreateBroadcast(BlockInputPrimitiveBroadcast broadcastInput) {
@@ -174,8 +174,30 @@ namespace MonoScratch.Compiler {
         }
 
         public void AppendSoftYield() {
-            if (ScreenRefresh)
+            if (CanYield)
                 Source.AppendLine("yield return YieldReason.YIELD;");
+        }
+
+        public BlockYieldType GetYieldType(string topId) {
+            BlockYieldType type = BlockYieldType.NONE;
+            string? blockID = topId;
+            do {
+                if (CurrentTarget?.Blocks.TryGetValue(blockID, out ItmScratchBlock? block) ?? false) {
+                    BlockYieldType blockType = block.GetYieldType(this);
+                    if (blockType > type) type = blockType;
+                    blockID = block.Block.NextID;
+                } else {
+                    Console.WriteLine($"Couldn't find block {blockID}.");
+                    break;
+                }
+            } while (blockID != null);
+            return type;
+        }
+
+        public BlockYieldType GetHatYieldType(ItmScratchBlock hat, BlockYieldType none = BlockYieldType.NONE) {
+            if (hat.Block.NextID == null) return none;
+            return GetYieldType(hat.Block.NextID);
+
         }
     }
 }

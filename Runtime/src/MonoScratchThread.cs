@@ -1,51 +1,81 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MonoScratch.Runtime {
 
-    public class MonoScratchThread {
+    public abstract class MonoScratchThread {
 
-        public delegate IEnumerable<YieldReason> ScratchFunction();
-
-        public readonly ScratchFunction Function;
         public ThreadStatus Status;
 
-        private IEnumerator<YieldReason> _enumerator;
         private bool _executing;
         private bool _restartQueued;
 
-        public MonoScratchThread(ScratchFunction function) {
-            Function = function;
+        public readonly Delegate FunctionDelegate;
+
+        public MonoScratchThread(Delegate functionDelegate) {
+            FunctionDelegate = functionDelegate;
             Status = ThreadStatus.YIELD;
-            _enumerator = function.Invoke().GetEnumerator();
             _executing = false;
             _restartQueued = false;
         }
 
         public void Restart() {
-            if (_executing) {
-                _restartQueued = true;
-                return;
-            }
-            Status = ThreadStatus.YIELD;
-            _enumerator = Function.Invoke().GetEnumerator();
+            if (_executing) _restartQueued = true;
+            else RunRestart();
         }
 
         public void Step() {
             _executing = true;
-            if (Status == ThreadStatus.YIELD) {
-                if (!_enumerator.MoveNext()) {
-                    Status = ThreadStatus.DONE;
-                }
-            }
-            if (_restartQueued) {
-                Status = ThreadStatus.YIELD;
-                _enumerator = Function.Invoke().GetEnumerator();
-                _restartQueued = false;
-            }
+            RunStep();
             _executing = false;
+            if (_restartQueued) RunRestart();
         }
 
+        protected virtual void RunRestart() {
+            Status = ThreadStatus.YIELD;
+            _restartQueued = false;
+        }
+
+        protected abstract void RunStep();
+    }
+
+    public class MonoScratchInstantThread : MonoScratchThread {
+
+        public delegate void InstantFunction();
+        public readonly InstantFunction Function;
+
+        public MonoScratchInstantThread(InstantFunction function) : base(function) {
+            Function = function;
+        }
+
+        protected override void RunStep() {
+            Function();
+            Status = ThreadStatus.DONE;
+        }
+    }
+
+    public class MonoScratchYieldingThread : MonoScratchThread {
+        public delegate IEnumerable<YieldReason> YieldingFunction();
+
+        public readonly YieldingFunction Function;
+        private IEnumerator<YieldReason> _enumerator;
         public YieldReason YieldReason => _enumerator.Current;
+
+        public MonoScratchYieldingThread(YieldingFunction function) : base(function) {
+            Function = function;
+            _enumerator = function.Invoke().GetEnumerator();
+        }
+
+        protected override void RunRestart() {
+            _enumerator = Function.Invoke().GetEnumerator();
+            base.RunRestart();
+        }
+
+        protected override void RunStep() {
+            if (!_enumerator.MoveNext()) {
+                Status = ThreadStatus.DONE;
+            }
+        }
     }
 
     public enum ThreadStatus : int {

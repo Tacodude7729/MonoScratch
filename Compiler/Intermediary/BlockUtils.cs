@@ -23,5 +23,11 @@ namespace MonoScratch.Compiler {
                 return double.IsNaN(numberValue) ? 0 : numberValue;
             return 0;
         }
+
+        public static BlockYieldType BiggestYield(params BlockYieldType[] types) {
+            BlockYieldType max = 0;
+            foreach (BlockYieldType type in types) if (type > max) max = type;
+            return max;
+        }
     }
 }

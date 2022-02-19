@@ -19,7 +19,7 @@ namespace MonoScratch.Runtime {
         public readonly MonoScratchRenderer Renderer;
 
         private readonly List<MonoScratchThread> _threads;
-        private readonly Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread> _threadFuncMap;
+        private readonly Dictionary<Delegate, MonoScratchThread> _threadFuncMap;
 
         public Stopwatch TimerStopwatch;
         public double Timer => TimerStopwatch.ElapsedTicks / (double)Stopwatch.Frequency;
@@ -34,7 +34,7 @@ namespace MonoScratch.Runtime {
             Settings = Interface.GetSettings();
 
             _threads = new List<MonoScratchThread>();
-            _threadFuncMap = new Dictionary<MonoScratchThread.ScratchFunction, MonoScratchThread>();
+            _threadFuncMap = new Dictionary<Delegate, MonoScratchThread>();
 
             foreach (IMonoScratchSprite sprite in DefaultSprites)
                 sprite.LayerNode = Targets.InsertLast(sprite);
@@ -67,18 +67,22 @@ namespace MonoScratch.Runtime {
             base.Initialize();
         }
 
-        public MonoScratchThread StartThread(MonoScratchThread.ScratchFunction function, bool restartExisting) {
-            if (_threadFuncMap.TryGetValue(function, out MonoScratchThread? thread)) {
-                if (restartExisting) {
+        private MonoScratchThread StartThread(MonoScratchThread newThread, bool restartExisting) {
+            if (_threadFuncMap.TryGetValue(newThread.FunctionDelegate, out MonoScratchThread? thread)) {
+                if (restartExisting)
                     thread.Restart();
-                }
                 return thread;
             }
-            thread = new MonoScratchThread(function);
-            _threads.Add(thread);
-            _threadFuncMap.Add(function, thread);
-            return thread;
+            _threads.Add(newThread);
+            _threadFuncMap.Add(newThread.FunctionDelegate, newThread);
+            return newThread;
         }
+
+        public MonoScratchThread StartThread(MonoScratchYieldingThread.YieldingFunction function, bool restartExisting)
+            => StartThread(new MonoScratchYieldingThread(function), restartExisting);
+
+        public MonoScratchThread StartThread(MonoScratchInstantThread.InstantFunction function, bool restartExisting)
+            => StartThread(new MonoScratchInstantThread(function), restartExisting);
 
         public void OnGreenFlag() {
             foreach (IMonoScratchTarget target in Targets.Forward())
@@ -122,7 +126,7 @@ namespace MonoScratch.Runtime {
                 if (removedThread)
                     _threads.RemoveAll(thread => {
                         if (thread.Status == ThreadStatus.DONE) {
-                            _threadFuncMap.Remove(thread.Function);
+                            _threadFuncMap.Remove(thread.FunctionDelegate);
                             return true;
                         }
                         return false;

@@ -43,12 +43,23 @@ namespace MonoScratch.Compiler {
                 }
             }
 
+            private DefinitionBlock? GetProcedure(SourceGeneratorContext ctx) {
+                DefinitionBlock? proc = null;
+                ctx.CurrentTarget?.Procedures.TryGetValue(Proccode, out proc);
+                return proc;
+            }
+
             public override void AppendExecute(SourceGeneratorContext ctx) {
-                if (ctx.CurrentTarget?.Procedures.TryGetValue(Proccode, out DefinitionBlock? procedure) ?? false) {
+                DefinitionBlock? procedure = GetProcedure(ctx);
+                if (procedure != null) {
                     StringBuilder line = new StringBuilder();
 
+                    BlockYieldType procYieldType = procedure.GetYieldType(ctx);
+                    BlockYieldType parentYieldType = ctx.CurrentHat?.GetYieldType(ctx) ?? throw new SystemException("No hat block found!");
+                    bool yieldReturn = procYieldType != BlockYieldType.NONE && parentYieldType != BlockYieldType.NONE;
+
                     string yr = ctx.GetNextSymbol("yr");
-                    if (procedure.YieldsThread)
+                    if (yieldReturn)
                         line.Append($"foreach (YieldReason {yr} in ");
 
                     line.Append(procedure.MethodName);
@@ -78,12 +89,14 @@ namespace MonoScratch.Compiler {
                     }
                     line.Append(")");
 
-                    if (procedure.YieldsThread) {
+                    if (yieldReturn) {
                         line.Append(")");
                         ctx.Source.AppendLine(line.ToString());
                         ctx.Source.PushBlock();
-                        if (ctx.ScreenRefresh) ctx.Source.AppendLine($"yield return {yr};");
-                        else ctx.Source.AppendLine($"if ({yr} != YieldReason.YIELD) yield return {yr};");
+                        if (parentYieldType == BlockYieldType.YIELD)
+                            ctx.Source.AppendLine($"yield return {yr};");
+                        else if (parentYieldType == BlockYieldType.YIELD_TICK)
+                            ctx.Source.AppendLine($"if ({yr} != YieldReason.YIELD) yield return {yr};");
                         ctx.Source.PopBlock();
                     } else {
                         line.Append(";");
@@ -108,6 +121,10 @@ namespace MonoScratch.Compiler {
                 }
             }
 
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx) {
+                return GetProcedure(ctx)?.GetYieldType(ctx) ?? BlockYieldType.NONE;
+            }
+
             public static CallBlock Create(SourceGeneratorContext ctx, ScratchBlock block) {
                 return new CallBlock(block);
             }
@@ -121,8 +138,6 @@ namespace MonoScratch.Compiler {
             public readonly string MethodName;
 
             public readonly bool ScreenRefresh;
-
-            public bool YieldsThread => ScreenRefresh;
 
             public int ArgumentCount => ArgumentIdMap.Count;
 
@@ -188,6 +203,13 @@ namespace MonoScratch.Compiler {
                     idMap.Add(argument.ID, argument); // But inputs which overrite eachother sitll have different ids.
                 }
                 return new DefinitionBlock(ctx, block, nameMap, idMap, proc, !(mutation.WithoutScreenRefresh ?? false));
+            }
+
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx) {
+                BlockYieldType type = ctx.GetHatYieldType(this);
+                if (!ScreenRefresh && type == BlockYieldType.YIELD)
+                    type = BlockYieldType.NONE;
+                return type;
             }
         }
 

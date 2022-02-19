@@ -49,6 +49,9 @@ namespace MonoScratch.Compiler {
                 ctx.Source.PopBlock();
             }
 
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+                => BlockUtils.BiggestYield(Substack.GetYieldType(ctx), BlockYieldType.YIELD);
+
             public static RepeatBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
                 new RepeatBlock(scratchBlock);
         }

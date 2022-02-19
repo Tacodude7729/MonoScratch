@@ -80,6 +80,11 @@ namespace MonoScratch.Compiler {
                 ctx.AppendBlocks(ID);
         }
 
+        public BlockYieldType GetYieldType(SourceGeneratorContext ctx) {
+            if (ID == null) return BlockYieldType.NONE; 
+            return ctx.GetYieldType(ID);
+        }
+
         public override string GetCode(SourceGeneratorContext ctx, BlockReturnType type) {
             if (ID == null)
                 throw new SystemException("Cannot evaluate a null block block input.");
