@@ -15,6 +15,9 @@ namespace MonoScratch.Compiler {
                         ?? throw new SystemException("SUBSTACK must be a block.");
                 else Substack = new BlockBlockInput();
             }
+
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+                => Substack.GetYieldType(ctx);
         }
 
         public class ForeverBlock : SubstackBlock {
@@ -99,6 +102,9 @@ namespace MonoScratch.Compiler {
                 ctx.Source.PopBlock();
             }
 
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+                => BlockUtils.BiggestYield(Substack.GetYieldType(ctx), Substack2.GetYieldType(ctx));
+
             public static IfElseBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
                 new IfElseBlock(scratchBlock);
         }
@@ -113,6 +119,9 @@ namespace MonoScratch.Compiler {
                 ctx.AppendSoftYield();
                 ctx.Source.PopBlock();
             }
+            
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+                => BlockUtils.BiggestYield(Substack.GetYieldType(ctx), BlockYieldType.YIELD);
 
             public static RepeatUntilBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
                 new RepeatUntilBlock(scratchBlock);
