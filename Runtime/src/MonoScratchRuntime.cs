@@ -4,19 +4,23 @@ using System.Collections.Generic;
 using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace MonoScratch.Runtime {
 
     public class MonoScratchRuntime : Game {
 
-        public readonly List<IMonoScratchSprite> DefaultSprites;
-        public readonly IMonoScratchStage Stage;
         public readonly ProjectSettings Settings;
 
+        public readonly List<IMonoScratchSprite> DefaultSprites;
+        public readonly IMonoScratchStage Stage;
         public readonly TargetLinkedList Targets;
 
         public readonly GraphicsDeviceManager Graphics;
         public readonly MonoScratchRenderer Renderer;
+
+        public KeyboardState KeyboardState { get; private set; }
+        public MouseState MouseState { get; private set; }
 
         private readonly List<MonoScratchThread> _threads;
         private readonly Dictionary<Delegate, MonoScratchThread> _threadFuncMap;
@@ -140,6 +144,8 @@ namespace MonoScratch.Runtime {
         }
 
         protected override void Update(GameTime gameTime) {
+            KeyboardState = Keyboard.GetState();
+            MouseState = Mouse.GetState();
             Step();
             base.Update(gameTime);
         }

@@ -32,6 +32,9 @@ namespace MonoScratch.Compiler {
             AddBlock("control_forever", ControlBlocks.ForeverBlock.Create);
             AddBlock("control_stop", ControlBlocks.StopBlock.Create);
 
+            AddBlock("sensing_keypressed", SensingBlocks.KeyPressedBlock.Create);
+            AddBlock("sensing_keyoptions", SensingBlocks.KeyOptionsBlock.Create);
+            AddBlock("sensing_mousedown", SensingBlocks.MouseDownBlock.Create);
             AddBlock("sensing_resettimer", SensingBlocks.ResetTimerBlock.Create);
             AddBlock("sensing_timer", SensingBlocks.TimerBlock.Create);
 

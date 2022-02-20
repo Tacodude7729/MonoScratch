@@ -31,6 +31,9 @@ namespace MonoScratch.Compiler {
                 ctx.Source.PopBlock();
             }
 
+            protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
+                => BlockUtils.BiggestYield(Substack.GetYieldType(ctx), BlockYieldType.YIELD);
+
             public static ForeverBlock Create(SourceGeneratorContext ctx, ScratchBlock scratchBlock) =>
                 new ForeverBlock(scratchBlock);
         }
@@ -119,7 +122,7 @@ namespace MonoScratch.Compiler {
                 ctx.AppendSoftYield();
                 ctx.Source.PopBlock();
             }
-            
+
             protected override BlockYieldType CalculateYieldType(SourceGeneratorContext ctx)
                 => BlockUtils.BiggestYield(Substack.GetYieldType(ctx), BlockYieldType.YIELD);
 
